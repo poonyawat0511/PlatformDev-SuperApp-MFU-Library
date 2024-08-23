@@ -25,8 +25,8 @@ export class BooksService {
   async create(createBookDto: CreateBookDto): Promise<Book> {
     try {
       const bookDoc = new this.bookModel(createBookDto);
-      const book = bookDoc.save();
-      return (await book).toObject();
+      const book = await bookDoc.save();
+      return book.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -47,10 +47,8 @@ export class BooksService {
     try {
       const book = await this.bookModel.findById(id).lean();
       if (!book) {
-        throw new ConflictException(
-          this.errorBuilder.build(ErrorMethod.notFound, {
-            id,
-          })
+        throw new NotFoundException(
+          this.errorBuilder.build(ErrorMethod.notFound, { id })
         );
       }
       return book;
@@ -60,8 +58,8 @@ export class BooksService {
   }
 
   async update(id: string, updateBookDto: UpdateBookDto): Promise<Book> {
+    const exists = await this.bookModel.exists({ _id: id });
     try {
-      const exists = await this.bookModel.exists({ _id: id });
       if (!exists) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id })
@@ -80,20 +78,17 @@ export class BooksService {
           })
         );
       }
+      throw error;
     }
   }
 
   async remove(id: string): Promise<Book> {
-    try {
-      const book = this.bookModel.findByIdAndDelete(id).lean();
-      if (!book) {
-        throw new NotFoundException(
-          this.errorBuilder.build(ErrorMethod.notFound, { id })
-        );
-      }
-      return book;
-    } catch (error) {
-      throw error;
+    const book = await this.bookModel.findByIdAndDelete(id).lean();
+    if (!book) {
+      throw new NotFoundException(
+        this.errorBuilder.build(ErrorMethod.notFound, { id })
+      );
     }
+    return book;
   }
 }

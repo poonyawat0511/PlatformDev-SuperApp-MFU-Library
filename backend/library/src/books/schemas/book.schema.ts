@@ -14,23 +14,23 @@ export class Book {
 
   @Prop(
     raw({
-      th: { type: String, required: true, unique: true },
-      en: { type: String, required: true, unique: true },
+      th: { type: String, required: true },
+      en: { type: String, required: true },
     })
   )
   description: { th: string; en: string };
 
-  @Prop({ type: String, required: true })
+  @Prop({ type: String, required: false })
   bookImage;
 
   @Prop(
     raw({
-      th: { type: String, required: true, unique: true },
-      en: { type: String, required: true, unique: true },
+      th: { type: String, required: true },
+      en: { type: String, required: true },
     })
   )
   type: { th: string; en: string };
-  
+
   @Prop({ type: Number, required: true, default: 0 })
   quantity: number;
 }

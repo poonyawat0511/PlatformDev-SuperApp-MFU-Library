@@ -68,7 +68,7 @@ export class BooksController {
   async findAll() {
     const books = await this.booksService.findAll();
     return createResponse(
-      HttpStatus.CREATED,
+      HttpStatus.OK,
       this.messageBuilder.build(ResponseMethod.findAll),
       books.map((book) => new BookEntity(book))
     );
@@ -79,8 +79,8 @@ export class BooksController {
   async findOne(@Param("id") id: string) {
     const book = await this.booksService.findOne(id);
     return createResponse(
-      HttpStatus.CREATED,
-      this.messageBuilder.build(ResponseMethod.findOne),
+      HttpStatus.OK,
+      this.messageBuilder.build(ResponseMethod.findOne, { id }),
       new BookEntity(book)
     );
   }
@@ -100,7 +100,7 @@ export class BooksController {
         })
     )
     file: Express.Multer.File
-  ): Promise<ResponseDto<any>> {
+  ): Promise<any> {
     const bookImage = file?.filename;
     const dtoWithPhoto = { ...updateBookDto, bookImage };
     const book = await this.booksService.update(id, dtoWithPhoto);
@@ -113,7 +113,7 @@ export class BooksController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Delete(":id")
-  async remove(@Param("id") id: string) {
+  async remove(@Param("id") id: string):Promise <any> {
     const book = await this.booksService.remove(id);
     return createResponse(
       HttpStatus.OK,
