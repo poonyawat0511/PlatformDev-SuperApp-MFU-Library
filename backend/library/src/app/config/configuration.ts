@@ -1,8 +1,8 @@
 export default () => ({
-  port: parseInt(process.env.PORT, 10) || 8080,
+  port: parseInt(process.env.PORT, 10) || 8082,
   baseUrl: process.env.BASE_URL || "http://127.0.0.1",
   upload: {
-    baseUrl: process.env.UPLOAD_BASE_URL || "http://127.0.0.1:8080/uploads",
+    baseUrl: process.env.UPLOAD_BASE_URL || "http://127.0.0.1:8082/uploads",
     apiPath: process.env.UPLOAD_API_PATH || "/uploads",
   },
   mongodb: {
