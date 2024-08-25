@@ -122,4 +122,4 @@ node_modules/
 packages/**/*.d.ts
 packages/**/*.js
 
-backend/library/*
+backend/library/dist
