@@ -31,4 +31,8 @@ export class CreateBookDto {
   @IsString()
   @IsIn(["READY", "NOT_READY"])
   status: BookStatus;
+
+  @IsOptional()
+  @IsNotEmpty()
+  quantity: number;
 }

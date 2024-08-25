@@ -39,6 +39,9 @@ export class Book {
     required: true,
   })
   status: BookStatus;
+
+  @Prop({ type: Number, required: true, default: 0 })
+  quantity: number;
 }
 export const BookSchema = SchemaFactory.createForClass(Book);
 BookSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });

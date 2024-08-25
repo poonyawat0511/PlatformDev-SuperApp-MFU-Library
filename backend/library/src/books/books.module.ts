@@ -10,5 +10,6 @@ import { Book, BookSchema } from './schemas/book.schema';
   ],
   controllers: [BooksController],
   providers: [BooksService],
+  exports: [MongooseModule],
 })
 export class BooksModule {}
