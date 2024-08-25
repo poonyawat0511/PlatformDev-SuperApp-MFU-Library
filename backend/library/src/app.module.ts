@@ -12,6 +12,7 @@ import { BooksModule } from './books/books.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TransactionsModule } from './transactions/transactions.module';
+import { BookCategoriesModule } from './book-categories/book-categories.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { TransactionsModule } from './transactions/transactions.module';
     AuthModule,
     UsersModule,
     TransactionsModule,
+    BookCategoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

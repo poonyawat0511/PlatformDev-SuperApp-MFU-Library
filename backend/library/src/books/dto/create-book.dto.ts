@@ -1,11 +1,15 @@
 import { Type } from "class-transformer";
 import {
+  IsIn,
+  IsMongoId,
   IsNotEmpty,
   IsObject,
   IsOptional,
+  IsString,
   ValidateNested,
 } from "class-validator";
 import { BookDTO } from "./book.dto";
+import { BookStatus } from "../enums/book-status.enum";
 
 export class CreateBookDto {
   @IsObject()
@@ -20,12 +24,11 @@ export class CreateBookDto {
 
   bookImage: string;
 
-  @IsObject()
-  @ValidateNested()
-  @Type(() => BookDTO)
-  type: BookDTO;
-
-  @IsOptional()
+  @IsMongoId()
   @IsNotEmpty()
-  quantity: number;
+  category: string;
+
+  @IsString()
+  @IsIn(["READY", "NOT_READY"])
+  status: BookStatus;
 }

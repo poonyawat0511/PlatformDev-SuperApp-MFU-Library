@@ -15,6 +15,7 @@ import {
   RequestAction,
 } from "src/app/common/utils/error.util";
 
+const POPULATE_PIPE = [{ path: "category" }];
 @Injectable()
 export class BooksService {
   private readonly errorBuilder = new ErrorBuilder("Books");
@@ -39,13 +40,16 @@ export class BooksService {
   }
 
   async findAll(): Promise<Book[]> {
-    const book = await this.bookModel.find().lean();
+    const book = await this.bookModel.find().populate(POPULATE_PIPE).lean();
     return book;
   }
 
   async findOne(id: string): Promise<Book> {
     try {
-      const book = await this.bookModel.findById(id).lean();
+      const book = await this.bookModel
+        .findById(id)
+        .populate(POPULATE_PIPE)
+        .lean();
       if (!book) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id })
@@ -68,6 +72,7 @@ export class BooksService {
       const options = { new: true };
       const book = await this.bookModel
         .findByIdAndUpdate(id, updateBookDto, options)
+        .populate(POPULATE_PIPE)
         .lean();
       return book;
     } catch (error) {

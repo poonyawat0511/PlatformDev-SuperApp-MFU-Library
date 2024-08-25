@@ -5,8 +5,8 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-} from 'class-validator';
-import { TransactionsType } from '../enums/transactions-type.enum';
+} from "class-validator";
+import { TransactionsType } from "../enums/transactions-type.enum";
 
 export class CreateTransactionDto {
   @IsNotEmpty()
@@ -18,16 +18,12 @@ export class CreateTransactionDto {
   book: string;
 
   @IsString()
-  @IsIn(['BORROW', 'RETURN'])
+  @IsIn(["BORROW", "RETURN", "IN_PROGRESS"])
   status: TransactionsType;
 
   @IsOptional()
   @IsDateString()
   dueDate: Date;
-
-  @IsOptional()
-  @IsDateString()
-  borrowDate: Date;
 
   @IsOptional()
   @IsDateString()
