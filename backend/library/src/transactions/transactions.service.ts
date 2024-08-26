@@ -16,6 +16,7 @@ import {
 } from "src/app/common/utils/error.util";
 import { Book } from "src/books/schemas/book.schema";
 import { TransactionsStatus } from "./enums/transactions-status.enum";
+import { BookStatus } from "src/books/enums/book-status.enum";
 
 @Injectable()
 export class TransactionsService {
@@ -43,6 +44,13 @@ export class TransactionsService {
     if (!book) {
       throw new NotFoundException(
         `Book with ID ${createTransactionDto.book} not found`
+      );
+    }
+
+    // Check if the book's status is not "READY"
+    if (book.status !== BookStatus.ready) {
+      throw new ConflictException(
+        `Book with ID ${createTransactionDto.book} is not ready for borrowing`
       );
     }
 
@@ -94,12 +102,21 @@ export class TransactionsService {
   ): Promise<Transaction> {
     // Validate returnDate based on status if status is included in updateTransactionDto
     if (
-      updateTransactionDto.status &&
       updateTransactionDto.status === TransactionsStatus.borrow &&
       updateTransactionDto.returnDate
     ) {
       throw new ConflictException(
         "When status is BORROW, returnDate must not be provided."
+      );
+    }
+
+    // Check if the status is being updated to RETURN, and ensure returnDate is provided
+    if (
+      updateTransactionDto.status === TransactionsStatus.return &&
+      !updateTransactionDto.returnDate
+    ) {
+      throw new BadRequestException(
+        "When status is RETURN, returnDate is required."
       );
     }
 
