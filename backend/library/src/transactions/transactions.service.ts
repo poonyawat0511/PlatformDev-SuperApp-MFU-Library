@@ -4,20 +4,30 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import { InjectModel } from "@nestjs/mongoose";
+import { Model } from "mongoose";
+import { ErrorBuilder, ErrorMethod } from "src/app/common/utils/error.util";
+import { BookStatus } from "src/books/enums/book-status.enum";
+import { Book } from "src/books/schemas/book.schema";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { UpdateTransactionDto } from "./dto/update-transaction.dto";
-import { InjectModel } from "@nestjs/mongoose";
-import { Transaction } from "./schemas/transaction.schema";
-import { Model } from "mongoose";
-import {
-  ErrorBuilder,
-  ErrorMethod,
-  RequestAction,
-} from "src/app/common/utils/error.util";
-import { Book } from "src/books/schemas/book.schema";
 import { TransactionsStatus } from "./enums/transactions-status.enum";
-import { BookStatus } from "src/books/enums/book-status.enum";
+import { Transaction } from "./schemas/transaction.schema";
 
+const POPULATE_PIPE = [
+  {
+    path: "book",
+    select: ["name.en", "bookImage", "category"],
+    populate: {
+      path: "category",
+      select: "name.en",
+    },
+  },
+  {
+    path: "user",
+    select: ["username"],
+  },
+];
 @Injectable()
 export class TransactionsService {
   private readonly errorBuilder = new ErrorBuilder("Transactions");
@@ -78,13 +88,19 @@ export class TransactionsService {
   }
 
   async findAll(): Promise<Transaction[]> {
-    const transaction = await this.transactionModel.find().lean();
+    const transaction = await this.transactionModel
+      .find()
+      .populate(POPULATE_PIPE)
+      .lean();
     return transaction;
   }
 
   async findOne(id: string): Promise<Transaction> {
     try {
-      const transaction = await this.transactionModel.findById(id).lean();
+      const transaction = await this.transactionModel
+        .findById(id)
+        .populate(POPULATE_PIPE)
+        .lean();
       if (!transaction) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id })
