@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BookCategoriesModule } from './book-categories/book-categories.module';
+import { RoomsModule } from './rooms/rooms.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { BookCategoriesModule } from './book-categories/book-categories.module';
     UsersModule,
     TransactionsModule,
     BookCategoriesModule,
+    RoomsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
