@@ -28,7 +28,7 @@ export class CreateBookDto {
   category: string;
 
   @IsString()
-  @IsIn(["READY", "NOT_READY"])
+  @IsIn(["ready", "not ready"])
   status: BookStatus;
 
   @IsOptional()
