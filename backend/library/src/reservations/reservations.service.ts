@@ -10,8 +10,8 @@ import { RoomStatus } from "src/rooms/enums/room-status.enum";
 import { Room } from "src/rooms/schemas/room.schema";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
-import { Reservation } from "./schemas/reservation.schema";
 import { reservationType } from "./enums/reservation.enum";
+import { Reservation } from "./schemas/reservation.schema";
 
 @Injectable()
 export class ReservationsService {
@@ -70,7 +70,38 @@ export class ReservationsService {
 
     // Create the reservation
     const reservation = new this.reservationModel(createReservationDto);
-    return reservation.save();
+    const savedReservation = await reservation.save();
+
+    // Set a timeout for 15 minutes to revert the room status to 'free' and update reservation type to 'return'
+    if (type === reservationType.reserve) {
+      setTimeout(
+        async () => {
+          const updatedReservation = await this.reservationModel.findById(
+            savedReservation._id
+          );
+          if (
+            updatedReservation &&
+            updatedReservation.type !== reservationType.in_use
+          ) {
+            // Update reservation type to 'return'
+            updatedReservation.type = reservationType.return;
+            await updatedReservation.save();
+
+            // Revert room status to 'free'
+            room.status = RoomStatus.free;
+            await room.save();
+
+            console.log(
+              `Room ${roomId} status reverted to 'free' and reservation type changed to 'return' after 15 minutes`
+            );
+          }
+        },
+        // change 15 to 1 if want to test time
+        15 * 60 * 1000 // Replace with 15 * 60 * 1000 for 15 minutes
+      );
+    }
+
+    return savedReservation;
   }
 
   async findAll(): Promise<Reservation[]> {
