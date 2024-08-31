@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
 import { Book } from "src/books/schemas/book.schema";
 import { User } from "src/users/schemas/user.schema";
-import { TransactionsStatus } from "../enums/transactions-status.enum";
+import { TransactionsType } from "../enums/transactions-type.enum";
 
 export type TransactionDocument = HydratedDocument<Transaction>;
 @Schema()
@@ -23,12 +23,12 @@ export class Transaction {
 
   @Prop({
     type: String,
-    enum: ["BORROW", "RETURN"],
+    enum: ["borrow", "return"],
     required: true,
   })
-  status: TransactionsStatus;
+  status: TransactionsType;
 
-  @Prop({ type: Date })
+  @Prop({ type: Date, required: true })
   dueDate?: Date;
 
   @Prop({ type: Date, default: Date.now })

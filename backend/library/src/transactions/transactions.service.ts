@@ -11,7 +11,7 @@ import { BookStatus } from "src/books/enums/book-status.enum";
 import { Book } from "src/books/schemas/book.schema";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { UpdateTransactionDto } from "./dto/update-transaction.dto";
-import { TransactionsStatus } from "./enums/transactions-status.enum";
+import { TransactionsType } from "./enums/transactions-type.enum";
 import { Transaction } from "./schemas/transaction.schema";
 
 const POPULATE_PIPE = [
@@ -43,7 +43,7 @@ export class TransactionsService {
     createTransactionDto: CreateTransactionDto
   ): Promise<Transaction> {
     // Check if the status is BORROW when creating a new transaction
-    if (createTransactionDto.status !== TransactionsStatus.borrow) {
+    if (createTransactionDto.status !== TransactionsType.borrow) {
       throw new BadRequestException(
         "New transactions must have the status 'BORROW'."
       );
@@ -65,13 +65,13 @@ export class TransactionsService {
     }
 
     // Adjust the book's quantity based on the transaction status
-    if (createTransactionDto.status === TransactionsStatus.borrow) {
+    if (createTransactionDto.status === TransactionsType.borrow) {
       if (book.quantity <= 0) {
         throw new ConflictException("Book is not available for borrowing");
       }
       // Decrease the quantity by 1
       book.quantity = (book.quantity || 0) - 1;
-    } else if (createTransactionDto.status === TransactionsStatus.return) {
+    } else if (createTransactionDto.status === TransactionsType.return) {
       // Increase the quantity by 1
       book.quantity = (book.quantity || 0) + 1;
     }
@@ -118,7 +118,7 @@ export class TransactionsService {
   ): Promise<Transaction> {
     // Validate returnDate based on status if status is included in updateTransactionDto
     if (
-      updateTransactionDto.status === TransactionsStatus.borrow &&
+      updateTransactionDto.status === TransactionsType.borrow &&
       updateTransactionDto.returnDate
     ) {
       throw new ConflictException(
@@ -128,7 +128,7 @@ export class TransactionsService {
 
     // Check if the status is being updated to RETURN, and ensure returnDate is provided
     if (
-      updateTransactionDto.status === TransactionsStatus.return &&
+      updateTransactionDto.status === TransactionsType.return &&
       !updateTransactionDto.returnDate
     ) {
       throw new BadRequestException(
@@ -149,8 +149,8 @@ export class TransactionsService {
 
     // Check if the status is being updated to RETURN and if the book has not been returned yet
     if (
-      updateTransactionDto.status === TransactionsStatus.return &&
-      currentTransaction.status === TransactionsStatus.borrow
+      updateTransactionDto.status === TransactionsType.return &&
+      currentTransaction.status === TransactionsType.borrow
     ) {
       // Find the associated book
       const book = await this.bookModel.findById(currentTransaction.book);

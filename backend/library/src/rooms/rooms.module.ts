@@ -10,5 +10,6 @@ import { Room, RoomSchema } from "./schemas/room.schema";
   ],
   controllers: [RoomsController],
   providers: [RoomsService],
+  exports: [MongooseModule],
 })
 export class RoomsModule {}

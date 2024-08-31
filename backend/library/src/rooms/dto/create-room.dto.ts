@@ -1,30 +1,25 @@
 import {
   IsIn,
+  IsMongoId,
   IsNotEmpty,
   IsNumber,
-  IsObject,
   IsString,
-  ValidateNested,
 } from "class-validator";
-import { RoomStatus, RoomType } from "../enums/room-status.enum";
-import { Type } from "class-transformer";
-import { RoomDto } from "./room.dto";
-
+import { RoomStatus } from "../enums/room-status.enum";
 export class CreateRoomDto {
   @IsNotEmpty()
   @IsNumber()
   room: number;
 
-  @IsObject()
-  @ValidateNested()
-  @Type(() => RoomDto)
-  detail: RoomDto;
+  @IsNotEmpty()
+  @IsNumber()
+  floor: number;
 
   @IsString()
-  @IsIn([RoomStatus.ready, RoomStatus.not_ready])
+  @IsIn([RoomStatus.free, RoomStatus.reserved, RoomStatus.in_use])
   status: RoomStatus;
 
-  @IsString()
-  @IsIn([RoomType.study, RoomType.media])
-  type: RoomType;
+  @IsMongoId()
+  @IsNotEmpty()
+  type: string;
 }

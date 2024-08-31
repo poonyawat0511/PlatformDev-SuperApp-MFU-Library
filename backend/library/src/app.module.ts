@@ -14,6 +14,8 @@ import { UsersModule } from './users/users.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BookCategoriesModule } from './book-categories/book-categories.module';
 import { RoomsModule } from './rooms/rooms.module';
+import { RoomTypesModule } from './room-types/room-types.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { RoomsModule } from './rooms/rooms.module';
     TransactionsModule,
     BookCategoriesModule,
     RoomsModule,
+    RoomTypesModule,
+    ReservationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

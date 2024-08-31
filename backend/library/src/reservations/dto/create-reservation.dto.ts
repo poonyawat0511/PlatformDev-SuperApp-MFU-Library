@@ -7,31 +7,31 @@ import {
   IsString,
 } from "class-validator";
 import { IsReturnDateAllowed } from "src/app/decorator/is-return-date.decorator";
-import { TransactionsType } from "../enums/transactions-type.enum";
+import { reservationType } from "../enums/reservation.enum";
 
-export class CreateTransactionDto {
+export class CreateReservationDto {
+  @IsNotEmpty()
+  @IsMongoId()
+  room: string;
+
   @IsNotEmpty()
   @IsMongoId()
   user: string;
 
-  @IsNotEmpty()
-  @IsMongoId()
-  book: string;
-
   @IsString()
-  @IsIn([TransactionsType.borrow, TransactionsType.return])
-  status: TransactionsType;
+  @IsIn([reservationType.reserve, reservationType.return,reservationType.in_use])
+  type: reservationType;
 
   @IsOptional()
   @IsDateString()
-  dueDate: Date;
+  dueTime: Date;
 
   @IsOptional()
   @IsDateString()
-  borrowDate: Date;
+  reserveTime: Date;
 
   @IsOptional()
   @IsDateString()
   @IsReturnDateAllowed()
-  returnDate: Date;
+  returnTime: Date;
 }

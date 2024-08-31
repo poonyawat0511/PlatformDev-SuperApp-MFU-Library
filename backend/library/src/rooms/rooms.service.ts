@@ -14,6 +14,12 @@ import { CreateRoomDto } from "./dto/create-room.dto";
 import { UpdateRoomDto } from "./dto/update-room.dto";
 import { Room } from "./schemas/room.schema";
 
+const POPULATE_PIPE = [
+  {
+    path: "type",
+    select: ["name.th", "name.en"],
+  },
+];
 @Injectable()
 export class RoomsService {
   private readonly errorBuilder = new ErrorBuilder("Rooms");
@@ -40,13 +46,16 @@ export class RoomsService {
   }
 
   async findAll(): Promise<Room[]> {
-    const room = await this.roomModel.find().lean();
+    const room = await this.roomModel.find().populate(POPULATE_PIPE).lean();
     return room;
   }
 
   async findOne(id: string): Promise<Room> {
     try {
-      const room = await this.roomModel.findById(id).lean();
+      const room = await this.roomModel
+        .findById(id)
+        .populate(POPULATE_PIPE)
+        .lean();
       if (!room) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id })
