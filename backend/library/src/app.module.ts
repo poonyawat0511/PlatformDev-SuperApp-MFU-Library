@@ -16,6 +16,7 @@ import { BookCategoriesModule } from './book-categories/book-categories.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { RoomTypesModule } from './room-types/room-types.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { RenewsModule } from './renews/renews.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ReservationsModule } from './reservations/reservations.module';
     RoomsModule,
     RoomTypesModule,
     ReservationsModule,
+    RenewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

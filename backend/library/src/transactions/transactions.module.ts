@@ -14,5 +14,6 @@ import { BooksModule } from "src/books/books.module";
   ],
   controllers: [TransactionsController],
   providers: [TransactionsService],
+  exports: [MongooseModule],
 })
 export class TransactionsModule {}
