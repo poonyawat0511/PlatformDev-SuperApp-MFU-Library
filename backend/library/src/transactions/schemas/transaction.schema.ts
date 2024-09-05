@@ -23,16 +23,19 @@ export class Transaction {
 
   @Prop({
     type: String,
-    enum: ["BORROW", "RETURN", "IN_PROGRESS"],
+    enum: ["borrow", "return"],
     required: true,
   })
   status: TransactionsType;
 
-  @Prop({ type: Date })
+  @Prop({ type: Date, required: true })
   dueDate?: Date;
 
   @Prop({ type: Date, default: Date.now })
-  timeStamp?: Date;
+  borrowDate?: Date;
+
+  @Prop({ type: Date, default: () => null })
+  returnDate?: Date;
 }
 export const TransactionSchema = SchemaFactory.createForClass(Transaction);
 TransactionSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });

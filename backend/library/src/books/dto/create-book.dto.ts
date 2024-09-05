@@ -1,7 +1,6 @@
 import { Type } from "class-transformer";
 import {
   IsIn,
-  IsMongoId,
   IsNotEmpty,
   IsObject,
   IsOptional,
@@ -24,11 +23,15 @@ export class CreateBookDto {
 
   bookImage: string;
 
-  @IsMongoId()
   @IsNotEmpty()
+  @IsOptional()
   category: string;
 
   @IsString()
-  @IsIn(["READY", "NOT_READY"])
+  @IsIn(["ready", "not ready"])
   status: BookStatus;
+
+  @IsOptional()
+  @IsNotEmpty()
+  quantity: number;
 }

@@ -1,4 +1,4 @@
 export enum BookStatus {
-  ready = 'READY',
-  not_ready = 'NOT_READY',
+  ready = "ready",
+  not_ready = "not ready",
 }

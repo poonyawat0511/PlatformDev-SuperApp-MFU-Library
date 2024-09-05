@@ -1,12 +1,11 @@
-import { MongoEntity } from "src/app/common/lib/mongo.entiy";
-import { TransactionsType } from "../enums/transactions-type.enum";
-
-import { User } from "src/users/schemas/user.schema";
 import { Types } from "mongoose";
-import { Book } from "src/books/schemas/book.schema";
+import { MongoEntity } from "src/app/common/lib/mongo.entiy";
 import { TransformId } from "src/app/decorator/transform-id.decorator";
-import { UserEntity } from "src/users/entities/user.entity";
 import { BookEntity } from "src/books/entities/book.entity";
+import { Book } from "src/books/schemas/book.schema";
+import { UserEntity } from "src/users/entities/user.entity";
+import { User } from "src/users/schemas/user.schema";
+import { TransactionsType } from "../enums/transactions-type.enum";
 
 export class TransactionEntity extends MongoEntity {
   @TransformId((v) => new UserEntity(v))
@@ -19,7 +18,9 @@ export class TransactionEntity extends MongoEntity {
 
   dueDate: Date;
 
-  timeStamp: Date;
+  borrowDate: Date;
+
+  returnDate: Date;
 
   constructor(partial: Partial<TransactionEntity>) {
     super();

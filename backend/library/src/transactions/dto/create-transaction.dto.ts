@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
+import { IsReturnDateAllowed } from "src/app/decorator/is-return-date.decorator";
 import { TransactionsType } from "../enums/transactions-type.enum";
 
 export class CreateTransactionDto {
@@ -18,7 +19,7 @@ export class CreateTransactionDto {
   book: string;
 
   @IsString()
-  @IsIn(["BORROW", "RETURN", "IN_PROGRESS"])
+  @IsIn([TransactionsType.borrow, TransactionsType.return])
   status: TransactionsType;
 
   @IsOptional()
@@ -27,5 +28,10 @@ export class CreateTransactionDto {
 
   @IsOptional()
   @IsDateString()
-  timeStamp: Date;
+  borrowDate: Date;
+
+  @IsOptional()
+  @IsDateString()
+  @IsReturnDateAllowed()
+  returnDate: Date;
 }

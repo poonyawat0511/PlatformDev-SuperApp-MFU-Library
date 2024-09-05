@@ -1,7 +1,7 @@
 import { Prop, raw, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
-import { BookStatus } from "../enums/book-status.enum";
 import { BookCategory } from "src/book-categories/schemas/book-category.schema";
+import { BookStatus } from "../enums/book-status.enum";
 
 export type BookDocument = HydratedDocument<Book>;
 @Schema()
@@ -35,10 +35,13 @@ export class Book {
 
   @Prop({
     type: String,
-    enum: ["READY", "NOT_READY"],
+    enum: ["ready", "not ready"],
     required: true,
   })
   status: BookStatus;
+
+  @Prop({ type: Number, required: true, default: 0 })
+  quantity: number;
 }
 export const BookSchema = SchemaFactory.createForClass(Book);
 BookSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });

@@ -19,6 +19,8 @@ export class BookEntity extends MongoEntity {
 
   status: BookStatus;
 
+  quantity: number;
+
   constructor(partial: Partial<BookEntity>) {
     super();
     Object.assign(this, partial);
