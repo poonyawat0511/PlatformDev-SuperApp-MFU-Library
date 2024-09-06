@@ -6,6 +6,8 @@ import { Room } from "src/rooms/schemas/room.schema";
 import { UserEntity } from "src/users/entities/user.entity";
 import { User } from "src/users/schemas/user.schema";
 import { MongoEntity } from "src/app/common/lib/mongo.entiy";
+import { Timeslot } from "src/timeslots/schemas/timeslot.schema";
+import { TimeslotEntity } from "src/timeslots/entities/timeslot.entity";
 
 export class ReservationEntity extends MongoEntity {
   @TransformId((v) => new RoomEntity(v))
@@ -16,11 +18,10 @@ export class ReservationEntity extends MongoEntity {
 
   type: reservationType;
 
-  dueTime: Date;
+  dateTime: Date;
 
-  reserveTime: Date;
-
-  returnTime: Date;
+  @TransformId((v) => new TimeslotEntity(v))
+  timeSlot?: Types.ObjectId | Timeslot | null;
 
   constructor(partial: Partial<ReservationEntity>) {
     super();

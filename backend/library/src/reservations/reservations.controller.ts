@@ -26,6 +26,7 @@ export class ReservationsController {
 
   constructor(private readonly reservationsService: ReservationsService) {}
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @Post()
   async create(@Body() createReservationDto: CreateReservationDto) {
     const reservation =
@@ -33,7 +34,7 @@ export class ReservationsController {
     return createResponse(
       HttpStatus.CREATED,
       this.messageBuilder.build(ResponseMethod.create),
-      reservation
+      new ReservationEntity(reservation)
     );
   }
 

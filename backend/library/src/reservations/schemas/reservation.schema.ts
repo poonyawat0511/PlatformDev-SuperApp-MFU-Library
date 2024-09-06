@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { HydratedDocument, SchemaTypes, Types } from "mongoose";
 import { Room } from "src/rooms/schemas/room.schema";
+import { Timeslot } from "src/timeslots/schemas/timeslot.schema";
 import { User } from "src/users/schemas/user.schema";
 import { reservationType } from "../enums/reservation.enum";
 
@@ -23,19 +24,21 @@ export class Reservation {
 
   @Prop({
     type: String,
-    enum: ["reserve", "return","in use"],
+    enum: ["pending", "confirmed", "cancelled"],
     required: true,
+    default: "pending",
   })
   type: reservationType;
 
-  @Prop({ type: Date, required: true })
-  dueTime?: Date;
+  @Prop({ type: Date, required: true, default: Date.now })
+  dateTime?: Date;
 
-  @Prop({ type: Date, default: Date.now })
-  reserveTime?: Date;
-
-  @Prop({ type: Date, default: () => null })
-  returnTime?: Date;
+  @Prop({
+    type: SchemaTypes.ObjectId,
+    ref: "Timeslot",
+    required: true,
+  })
+  timeSlot?: Timeslot | Types.ObjectId;
 }
 export const ReservationSchema = SchemaFactory.createForClass(Reservation);
 ReservationSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });
