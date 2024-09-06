@@ -17,6 +17,7 @@ import { RoomsModule } from './rooms/rooms.module';
 import { RoomTypesModule } from './room-types/room-types.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { RenewsModule } from './renews/renews.module';
+import { TimeslotsModule } from './timeslots/timeslots.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { RenewsModule } from './renews/renews.module';
     RoomTypesModule,
     ReservationsModule,
     RenewsModule,
+    TimeslotsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
