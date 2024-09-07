@@ -11,7 +11,7 @@ export class Timeslot {
   end: string;
 }
 export const TimeslotSchema = SchemaFactory.createForClass(Timeslot);
-TimeslotSchema.index({ start: 1, end: 1 }, { unique: true });
+// TimeslotSchema.index({ start: 1, end: 1 }, { unique: true });
 
 TimeslotSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });
 TimeslotSchema.set("toObject", {
