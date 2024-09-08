@@ -13,11 +13,11 @@ import {
 import { RoomTimeSlotStatus } from "src/room-timeslots/enums/room-timeslot.enum"; // Import RoomTimeSlotStatus enum
 import { RoomTimeSlot } from "src/room-timeslots/schemas/room-timeslot.schema";
 import { Room } from "src/rooms/schemas/room.schema";
+import { Timeslot } from "src/timeslots/schemas/timeslot.schema";
 import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
 import { reservationType } from "./enums/reservation.enum";
 import { Reservation } from "./schemas/reservation.schema";
-// Assumed the enum location
 
 @Injectable()
 export class ReservationsService {
@@ -37,15 +37,15 @@ export class ReservationsService {
     createReservationDto: CreateReservationDto
   ): Promise<Reservation> {
     try {
-      // Ensure status defaults to "pending"
+      // Set default reservation type to "pending"
       createReservationDto.type = reservationType.pending;
 
-      // 2. Find the RoomTimeSlot and update its status to "reserved"
+      // Find the RoomTimeSlot and update its status to "reserved"
       const { room, timeSlot } = createReservationDto;
-      const roomTimeSlot = await this.roomTimeSlotModel.findOne({
-        room,
-        timeSlot,
-      });
+      const roomTimeSlot = await this.roomTimeSlotModel
+        .findOne({ room, timeSlot })
+        .populate("timeSlot");
+
       if (!roomTimeSlot) {
         throw new NotFoundException("RoomTimeSlot not found");
       }
@@ -54,13 +54,21 @@ export class ReservationsService {
         throw new ConflictException("RoomTimeSlot is not available");
       }
 
-      // Assign status using the enum
+      // Update RoomTimeSlot status to "reserved"
       roomTimeSlot.status = RoomTimeSlotStatus.reserved;
       await roomTimeSlot.save();
 
       // Create and save the reservation
       const reservationDoc = new this.reservationModel(createReservationDto);
       const reservation = await reservationDoc.save();
+
+      // Schedule timeout based on Timeslot start time
+      this.scheduleTimeout(
+        reservation.id,
+        room,
+        timeSlot,
+        roomTimeSlot.timeSlot as Timeslot
+      );
 
       return reservation.toObject();
     } catch (error) {
@@ -73,6 +81,93 @@ export class ReservationsService {
       }
       throw error;
     }
+  }
+
+  private async scheduleTimeout(
+    reservationId: string,
+    room: string,
+    timeSlot: string,
+    timeslot: Timeslot
+  ) {
+    // Convert timeslot start to Date
+    const timeslotStartTime = this.convertTimeslotStartToTime(timeslot.start);
+    const currentTime = new Date();
+
+    // Log times for debugging
+    console.log(`Timeslot start time: ${timeslotStartTime}`);
+    console.log(`Current time: ${currentTime}`);
+
+    // Calculate the delay: 15 minutes after the timeslot start time
+    const delay =
+      timeslotStartTime.getTime() + 15 * 60 * 1000 - currentTime.getTime();
+
+    // Log delay for debugging
+    console.log(`Calculated delay: ${delay} milliseconds`);
+
+    if (delay > 0) {
+      console.log(`Setting timeout for ${delay} milliseconds.`);
+
+      setTimeout(async () => {
+        console.log("Timeout triggered.");
+        try {
+          const currentReservation =
+            await this.reservationModel.findById(reservationId);
+          if (
+            currentReservation &&
+            currentReservation.type === reservationType.pending
+          ) {
+            // Update RoomTimeSlot status back to "free"
+            const updatedRoomTimeSlot = await this.roomTimeSlotModel.findOne({
+              room,
+              timeSlot,
+            });
+            if (
+              updatedRoomTimeSlot &&
+              updatedRoomTimeSlot.status === RoomTimeSlotStatus.reserved
+            ) {
+              updatedRoomTimeSlot.status = RoomTimeSlotStatus.free;
+              await updatedRoomTimeSlot.save();
+              console.log(
+                `RoomTimeSlot for room ${room} and timeSlot ${timeSlot} is now free.`
+              );
+            }
+
+            // Update the reservation status to "cancelled"
+            currentReservation.type = reservationType.cancelled;
+            await currentReservation.save();
+            console.log(`Reservation ${reservationId} is now cancelled.`);
+          }
+        } catch (error) {
+          console.error("Error during timeout execution:", error);
+        }
+      }, delay);
+    } else {
+      console.log("Delay is not positive, timeout will not be set.");
+    }
+  }
+
+  private convertTimeslotStartToTime(start: string): Date {
+    // Convert time string "4:09" to a Date object
+    const [hoursStr, minutesStr] = start.split(":").map(str => str.trim());
+
+    // Convert strings to numbers
+    const hours = Number(hoursStr);
+    const minutes = Number(minutesStr);
+
+    // Validate the converted numbers
+    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+      console.error(`Invalid timeslot start string: ${start}`);
+      return new Date(NaN); // Return an invalid date
+    }
+
+    // Create a new Date object for the current date
+    const now = new Date();
+    now.setHours(hours);
+    now.setMinutes(minutes);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+
+    return now;
   }
 
   async findAll(): Promise<Reservation[]> {
@@ -130,8 +225,8 @@ export class ReservationsService {
                 `RoomTimeSlot for room ${room} and timeSlot ${timeSlot} is now free`
               );
             },
-            1 * 60 * 1000
-          ); // 1 hour in milliseconds
+            1 * 60 * 60 * 1000 // 1 hour in milliseconds
+          );
         }
       }
 
