@@ -89,7 +89,6 @@ export class ReservationsService {
     timeSlot: string,
     timeslot: Timeslot
   ) {
-    // Convert timeslot start to Date
     const timeslotStartTime = this.convertTimeslotStartToTime(timeslot.start);
     const currentTime = new Date();
 
@@ -97,9 +96,16 @@ export class ReservationsService {
     console.log(`Timeslot start time: ${timeslotStartTime}`);
     console.log(`Current time: ${currentTime}`);
 
+    // If the timeslot start time has already passed for today, schedule it for tomorrow
+    if (currentTime >= timeslotStartTime) {
+      console.log("Timeslot has passed for today, scheduling for tomorrow.");
+      // Add 24 hours to the timeslot start time
+      timeslotStartTime.setDate(timeslotStartTime.getDate() + 1);
+    }
+
     // Calculate the delay: 15 minutes after the timeslot start time
     const delay =
-      timeslotStartTime.getTime() + 15 * 60 * 1000 - currentTime.getTime();
+      timeslotStartTime.getTime() + 1 * 60 * 1000 - currentTime.getTime();
 
     // Log delay for debugging
     console.log(`Calculated delay: ${delay} milliseconds`);
@@ -148,14 +154,21 @@ export class ReservationsService {
 
   private convertTimeslotStartToTime(start: string): Date {
     // Convert time string "4:09" to a Date object
-    const [hoursStr, minutesStr] = start.split(":").map(str => str.trim());
+    const [hoursStr, minutesStr] = start.split(":").map((str) => str.trim());
 
     // Convert strings to numbers
     const hours = Number(hoursStr);
     const minutes = Number(minutesStr);
 
     // Validate the converted numbers
-    if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    if (
+      isNaN(hours) ||
+      isNaN(minutes) ||
+      hours < 0 ||
+      hours > 23 ||
+      minutes < 0 ||
+      minutes > 59
+    ) {
       console.error(`Invalid timeslot start string: ${start}`);
       return new Date(NaN); // Return an invalid date
     }
@@ -225,7 +238,7 @@ export class ReservationsService {
                 `RoomTimeSlot for room ${room} and timeSlot ${timeSlot} is now free`
               );
             },
-            1 * 60 * 60 * 1000 // 1 hour in milliseconds
+            1 * 60 * 1000 // 1 hour in milliseconds
           );
         }
       }
