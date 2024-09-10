@@ -21,6 +21,10 @@ export class CreateBookDto {
   @Type(() => BookDTO)
   description: BookDTO;
 
+  @IsString()
+  @IsNotEmpty()
+  ISBN: string;
+
   bookImage: string;
 
   @IsNotEmpty()

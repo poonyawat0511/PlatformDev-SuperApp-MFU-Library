@@ -22,6 +22,9 @@ export class Book {
   )
   description: { th: string; en: string };
 
+  @Prop({ type: String, required: true, unique: true })
+  ISBN: string;
+
   @Prop({ type: String, required: false })
   bookImage;
 
