@@ -1,5 +1,4 @@
 export enum RoomStatus {
-  free = "free",
-  reserved = "reserved",
-  in_use = "in use",
+  ready = "ready",
+  not_ready = "not ready",
 }
