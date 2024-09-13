@@ -11,13 +11,15 @@ async function bootstrap() {
   // app settings
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix("api");
+
   app.enableCors({ origin: "*" });
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-
+  //ต่อกับ reactnative
   app.enableCors({
-    origin: "http://localhost:3000", // Replace with your frontend URL
+    origin: "http://localhost:3001", // Replace with your frontend URL
     credentials: true, // Allow cookies to be included in requests
   });
+  
 
   // Express middleware
   app.use(cookieParser());

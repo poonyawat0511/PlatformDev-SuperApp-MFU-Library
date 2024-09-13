@@ -20,6 +20,7 @@
     "expo-router": "~3.5.23",
     "fs": "0.0.1-security",
     "inquirer": "8.2.5",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "superapp": "file:"
   }
 }
