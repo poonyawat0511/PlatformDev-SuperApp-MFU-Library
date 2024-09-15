@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
+import * as bcrypt from "bcrypt";
 import { Model } from "mongoose";
 import {
   ErrorBuilder,
@@ -13,10 +14,9 @@ import {
 import { RegisterDTO } from "./dto/register.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./schemas/user.schema";
-
 @Injectable()
 export class UsersService {
-  private readonly errorBuilder = new ErrorBuilder("Books");
+  private readonly errorBuilder = new ErrorBuilder("Users");
 
   constructor(
     @InjectModel(User.name)
@@ -80,6 +80,13 @@ export class UsersService {
           this.errorBuilder.build(ErrorMethod.notFound, { id })
         );
       }
+
+      // Check if the password is being updated
+      if (updateUserDto.password) {
+        const salt = await bcrypt.genSalt(10);
+        updateUserDto.password = await bcrypt.hash(updateUserDto.password, salt);
+      }
+
       const options = { new: true };
       const user = await this.userModel
         .findByIdAndUpdate(id, updateUserDto, options)
