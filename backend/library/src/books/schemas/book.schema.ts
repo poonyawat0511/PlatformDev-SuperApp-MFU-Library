@@ -26,7 +26,7 @@ export class Book {
   ISBN: string;
 
   @Prop({ type: String, required: false })
-  bookImage;
+  bookImage: string;
 
   @Prop({
     type: SchemaTypes.ObjectId,
