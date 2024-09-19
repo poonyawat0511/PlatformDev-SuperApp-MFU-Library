@@ -14,6 +14,9 @@ import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { UpdateTransactionDto } from "./dto/update-transaction.dto";
 import { TransactionsType } from "./enums/transactions-type.enum";
 import { Transaction } from "./schemas/transaction.schema";
+import BookInterface from "src/books/interfaces/book.interface";
+import { extractQury } from "src/app/common/utils/query.util";
+import { UserInterface } from "src/users/interfaces/user.interface";
 
 const POPULATE_PIPE = [
   {
@@ -29,6 +32,21 @@ const POPULATE_PIPE = [
     select: ["username"],
   },
 ];
+
+type FindBookOptions = {
+  includes: string | string[];
+};
+
+type FindUserOptions = {
+  includes: string | string[];
+};
+
+type TransactionWithBook = Transaction & { book?: BookInterface | null };
+
+type TransactionWithUser = Transaction & { user?: UserInterface | null };
+
+type QueryResults = Transaction | TransactionWithBook | TransactionWithUser;
+
 @Injectable()
 export class TransactionsService {
   private readonly errorBuilder = new ErrorBuilder("Transactions");
@@ -43,8 +61,9 @@ export class TransactionsService {
   ) {}
 
   async create(
-    createTransactionDto: CreateTransactionDto
-  ): Promise<Transaction> {
+    createTransactionDto: CreateTransactionDto,
+    options?: FindBookOptions | FindUserOptions
+  ): Promise<QueryResults> {
     // Check if the status is BORROW when creating a new transaction
     if (createTransactionDto.status !== TransactionsType.borrow) {
       throw new BadRequestException(
@@ -102,7 +121,16 @@ export class TransactionsService {
     });
     const transaction = await transactionDoc.save();
 
-    return transaction.toObject();
+    const populatedTransaction = await transaction.populate(POPULATE_PIPE);
+
+    if (options.includes) {
+      const query = extractQury(options.includes);
+      if ((query.book, query.user)) {
+        await populatedTransaction.populate(POPULATE_PIPE);
+      }
+    }
+
+    return populatedTransaction.toObject();
   }
 
   async findAll(): Promise<Transaction[]> {
@@ -132,8 +160,9 @@ export class TransactionsService {
 
   async update(
     id: string,
-    updateTransactionDto: UpdateTransactionDto
-  ): Promise<Transaction> {
+    updateTransactionDto: UpdateTransactionDto,
+    options?: FindBookOptions | FindUserOptions
+  ): Promise<QueryResults> {
     // Validate returnDate based on status if status is included in updateTransactionDto
     if (
       updateTransactionDto.status === TransactionsType.borrow &&
@@ -215,10 +244,16 @@ export class TransactionsService {
 
     // Update the transaction
     try {
-      const options = { new: true };
       const updatedTransaction = await this.transactionModel
-        .findByIdAndUpdate(id, updateTransactionDto, options)
+        .findByIdAndUpdate(id, updateTransactionDto, { new: true })
+        .populate(POPULATE_PIPE)
         .lean();
+
+      if (options.includes) {
+        const query = extractQury(options.includes);
+        if ((query.book, query.user)) {
+        }
+      }
 
       // If the status is updated to BORROW, adjust the book quantity
       if (

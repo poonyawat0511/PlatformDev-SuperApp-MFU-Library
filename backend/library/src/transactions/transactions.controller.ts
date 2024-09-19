@@ -9,6 +9,7 @@ import {
   HttpStatus,
   UseInterceptors,
   ClassSerializerInterceptor,
+  Query,
 } from "@nestjs/common";
 import { TransactionsService } from "./transactions.service";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
@@ -27,9 +28,14 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
   @UseInterceptors(ClassSerializerInterceptor)
   @Post()
-  async create(@Body() createTransactionDto: CreateTransactionDto) {
-    const transaction =
-      await this.transactionsService.create(createTransactionDto);
+  async create(
+    @Body() createTransactionDto: CreateTransactionDto,
+    @Query("includes") includes?: string | string[]
+  ) {
+    const transaction = await this.transactionsService.create(
+      createTransactionDto,
+      { includes }
+    );
     return createResponse(
       HttpStatus.CREATED,
       this.messageBuilder.build(ResponseMethod.create),
@@ -60,11 +66,13 @@ export class TransactionsController {
   @Patch(":id")
   async update(
     @Param("id") id: string,
-    @Body() updateTransactionDto: UpdateTransactionDto
+    @Body() updateTransactionDto: UpdateTransactionDto,
+    @Query("includes") includes?: string | string[]
   ) {
     const transaction = await this.transactionsService.update(
       id,
-      updateTransactionDto
+      updateTransactionDto,
+      { includes }
     );
     return createResponse(
       HttpStatus.OK,
