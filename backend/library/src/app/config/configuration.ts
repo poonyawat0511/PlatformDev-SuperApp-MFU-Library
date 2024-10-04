@@ -6,7 +6,7 @@ export default () => ({
     apiPath: process.env.UPLOAD_API_PATH || "/uploads",
   },
   mongodb: {
-    uri: process.env.MONGO_URI || "mongodb://127.0.0.1:27017",
+    uri: process.env.MONGO_URI || "mongodb+srv://admin:user1234@cluster0.35bsc.mongodb.net/",
     dbName: process.env.DATABASE_NAME || "library-db",
   },
   // database: process.env.MONGODB_URI,
