@@ -9,15 +9,19 @@ import { Model } from "mongoose";
 import { ErrorBuilder, ErrorMethod } from "src/app/common/utils/error.util";
 import { BookStatus } from "src/books/enums/book-status.enum";
 import { Book } from "src/books/schemas/book.schema";
+import { User } from "src/users/schemas/user.schema";
 import { CreateTransactionDto } from "./dto/create-transaction.dto";
 import { UpdateTransactionDto } from "./dto/update-transaction.dto";
 import { TransactionsType } from "./enums/transactions-type.enum";
 import { Transaction } from "./schemas/transaction.schema";
+import BookInterface from "src/books/interfaces/book.interface";
+import { extractQury } from "src/app/common/utils/query.util";
+import { UserInterface } from "src/users/interfaces/user.interface";
 
 const POPULATE_PIPE = [
   {
     path: "book",
-    select: ["name.en", "bookImage", "category"],
+    select: ["name.en", "bookImage", "category", "name.th", "ISBN"],
     populate: {
       path: "category",
       select: "name.en",
@@ -28,6 +32,21 @@ const POPULATE_PIPE = [
     select: ["username"],
   },
 ];
+
+type FindBookOptions = {
+  includes: string | string[];
+};
+
+type FindUserOptions = {
+  includes: string | string[];
+};
+
+type TransactionWithBook = Transaction & { book?: BookInterface | null };
+
+type TransactionWithUser = Transaction & { user?: UserInterface | null };
+
+type QueryResults = Transaction | TransactionWithBook | TransactionWithUser;
+
 @Injectable()
 export class TransactionsService {
   private readonly errorBuilder = new ErrorBuilder("Transactions");
@@ -36,12 +55,15 @@ export class TransactionsService {
     @InjectModel(Transaction.name)
     private readonly transactionModel: Model<Transaction>,
     @InjectModel(Book.name)
-    private readonly bookModel: Model<Book>
+    private readonly bookModel: Model<Book>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<User>
   ) {}
 
   async create(
-    createTransactionDto: CreateTransactionDto
-  ): Promise<Transaction> {
+    createTransactionDto: CreateTransactionDto,
+    options?: FindBookOptions | FindUserOptions
+  ): Promise<QueryResults> {
     // Check if the status is BORROW when creating a new transaction
     if (createTransactionDto.status !== TransactionsType.borrow) {
       throw new BadRequestException(
@@ -49,11 +71,13 @@ export class TransactionsService {
       );
     }
 
-    // Find the book by ID
-    const book = await this.bookModel.findById(createTransactionDto.book);
+    // Find the book by ISBN
+    const book = await this.bookModel.findOne({
+      ISBN: createTransactionDto.book,
+    });
     if (!book) {
       throw new NotFoundException(
-        `Book with ID ${createTransactionDto.book} not found`
+        `Book with ISBN ${createTransactionDto.book} not found`
       );
     }
 
@@ -61,6 +85,16 @@ export class TransactionsService {
     if (book.status !== BookStatus.ready) {
       throw new ConflictException(
         `Book with ID ${createTransactionDto.book} is not ready for borrowing`
+      );
+    }
+
+    // Find the user by username
+    const user = await this.userModel.findOne({
+      username: createTransactionDto.user,
+    });
+    if (!user) {
+      throw new NotFoundException(
+        `User with username ${createTransactionDto.user} not found`
       );
     }
 
@@ -77,14 +111,26 @@ export class TransactionsService {
     }
 
     // Save the updated book quantity
-    const updatedBook = await book.save();
-    console.log(`Updated book quantity: ${updatedBook.quantity}`);
+    await book.save();
 
     // Create the transaction
-    const transactionDoc = new this.transactionModel(createTransactionDto);
+    const transactionDoc = new this.transactionModel({
+      ...createTransactionDto,
+      user: user._id,
+      book: book.id,
+    });
     const transaction = await transactionDoc.save();
 
-    return transaction.toObject();
+    const populatedTransaction = await transaction.populate(POPULATE_PIPE);
+
+    if (options.includes) {
+      const query = extractQury(options.includes);
+      if ((query.book, query.user)) {
+        await populatedTransaction.populate(POPULATE_PIPE);
+      }
+    }
+
+    return populatedTransaction.toObject();
   }
 
   async findAll(): Promise<Transaction[]> {
@@ -114,8 +160,9 @@ export class TransactionsService {
 
   async update(
     id: string,
-    updateTransactionDto: UpdateTransactionDto
-  ): Promise<Transaction> {
+    updateTransactionDto: UpdateTransactionDto,
+    options?: FindBookOptions | FindUserOptions
+  ): Promise<QueryResults> {
     // Validate returnDate based on status if status is included in updateTransactionDto
     if (
       updateTransactionDto.status === TransactionsType.borrow &&
@@ -141,10 +188,40 @@ export class TransactionsService {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
     }
 
-    // Get the current transaction
+    // Find the current transaction
     const currentTransaction = await this.transactionModel.findById(id);
     if (!currentTransaction) {
       throw new NotFoundException(`Transaction with ID ${id} not found`);
+    }
+
+    // If the book ISBN is being updated, find the book by new ISBN
+    if (updateTransactionDto.book) {
+      const book = await this.bookModel.findOne({
+        ISBN: updateTransactionDto.book,
+      });
+      if (!book) {
+        throw new NotFoundException(
+          `Book with ISBN ${updateTransactionDto.book} not found`
+        );
+      }
+
+      // Update book reference
+      updateTransactionDto.book = book.id;
+    }
+
+    // If the username is being updated, find the user by new username
+    if (updateTransactionDto.user) {
+      const user = await this.userModel.findOne({
+        username: updateTransactionDto.user,
+      });
+      if (!user) {
+        throw new NotFoundException(
+          `User with username ${updateTransactionDto.user} not found`
+        );
+      }
+
+      // Update user reference
+      updateTransactionDto.user = user._id;
     }
 
     // Check if the status is being updated to RETURN and if the book has not been returned yet
@@ -165,11 +242,39 @@ export class TransactionsService {
       await book.save();
     }
 
+    // Update the transaction
     try {
-      const options = { new: true };
       const updatedTransaction = await this.transactionModel
-        .findByIdAndUpdate(id, updateTransactionDto, options)
+        .findByIdAndUpdate(id, updateTransactionDto, { new: true })
+        .populate(POPULATE_PIPE)
         .lean();
+
+      if (options.includes) {
+        const query = extractQury(options.includes);
+        if ((query.book, query.user)) {
+        }
+      }
+
+      // If the status is updated to BORROW, adjust the book quantity
+      if (
+        updatedTransaction.status === TransactionsType.borrow &&
+        currentTransaction.status !== TransactionsType.borrow
+      ) {
+        const book = await this.bookModel.findById(updatedTransaction.book);
+        if (!book) {
+          throw new NotFoundException(
+            `Book with ID ${updatedTransaction.book} not found`
+          );
+        }
+
+        if (book.quantity <= 0) {
+          throw new ConflictException("Book is not available for borrowing");
+        }
+
+        // Decrease the quantity by 1
+        book.quantity = (book.quantity || 0) - 1;
+        await book.save();
+      }
 
       return updatedTransaction;
     } catch (error) {

@@ -14,7 +14,7 @@ export class Room {
 
   @Prop({
     type: String,
-    enum: ["free", "reserved", "in use"],
+    enum: ["ready", "not ready"],
     required: true,
   })
   status: RoomStatus;

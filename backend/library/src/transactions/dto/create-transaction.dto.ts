@@ -11,11 +11,9 @@ import { TransactionsType } from "../enums/transactions-type.enum";
 
 export class CreateTransactionDto {
   @IsNotEmpty()
-  @IsMongoId()
   user: string;
 
   @IsNotEmpty()
-  @IsMongoId()
   book: string;
 
   @IsString()

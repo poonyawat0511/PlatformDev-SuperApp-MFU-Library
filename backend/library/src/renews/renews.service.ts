@@ -11,11 +11,22 @@ import {
   ErrorMethod,
   RequestAction,
 } from "src/app/common/utils/error.util";
+import { Transaction } from "src/transactions/schemas/transaction.schema";
 import { CreateRenewDto } from "./dto/create-renew.dto";
 import { UpdateRenewDto } from "./dto/update-renew.dto";
-import { Renew } from "./schemas/renew.schema";
-import { Transaction } from "src/transactions/schemas/transaction.schema";
 import { RenewStatus } from "./enums/renew-status.enum";
+import { Renew } from "./schemas/renew.schema";
+
+const POPULATE_PIPE = [
+  {
+    path: "transaction",
+    select: ["book"],
+    populate: {
+      path: "book",
+      select: ["name.en", "name.th", "ISBN"],
+    },
+  },
+];
 
 @Injectable()
 export class RenewsService {
@@ -55,13 +66,16 @@ export class RenewsService {
   }
 
   async findAll(): Promise<Renew[]> {
-    const renew = await this.renewModel.find().lean();
+    const renew = await this.renewModel.find().populate(POPULATE_PIPE).lean();
     return renew;
   }
 
   async findOne(id: string): Promise<Renew> {
     try {
-      const renew = await this.renewModel.findById(id).lean();
+      const renew = await this.renewModel
+        .findById(id)
+        .populate(POPULATE_PIPE)
+        .lean();
       if (!renew) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id })

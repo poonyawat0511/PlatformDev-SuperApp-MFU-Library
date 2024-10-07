@@ -1,5 +1,5 @@
 export enum reservationType {
-  reserve = "reserve",
-  return = "return",
-  in_use = "in use",
+  pending = "pending",
+  confirmed = "confirmed",
+  cancelled = "cancelled",
 }

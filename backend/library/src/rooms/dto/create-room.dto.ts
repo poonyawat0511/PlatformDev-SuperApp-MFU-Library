@@ -16,7 +16,7 @@ export class CreateRoomDto {
   floor: number;
 
   @IsString()
-  @IsIn([RoomStatus.free, RoomStatus.reserved, RoomStatus.in_use])
+  @IsIn([RoomStatus.ready, RoomStatus.not_ready])
   status: RoomStatus;
 
   @IsMongoId()

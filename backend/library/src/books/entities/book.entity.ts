@@ -11,6 +11,8 @@ export class BookEntity extends MongoEntity {
 
   description: { th: string; en: string };
 
+  ISBN: string;
+
   @TransformUrl({ type: "string" })
   bookImage: string;
 

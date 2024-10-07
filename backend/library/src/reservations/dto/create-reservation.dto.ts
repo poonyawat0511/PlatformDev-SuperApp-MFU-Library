@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
-import { IsReturnDateAllowed } from "src/app/decorator/is-return-date.decorator";
 import { reservationType } from "../enums/reservation.enum";
 
 export class CreateReservationDto {
@@ -19,19 +18,17 @@ export class CreateReservationDto {
   user: string;
 
   @IsString()
-  @IsIn([reservationType.reserve, reservationType.return,reservationType.in_use])
+  @IsIn([
+    reservationType.pending,
+    reservationType.confirmed,
+    reservationType.cancelled,
+  ])
   type: reservationType;
 
   @IsOptional()
   @IsDateString()
-  dueTime: Date;
+  dateTime: Date;
 
-  @IsOptional()
-  @IsDateString()
-  reserveTime: Date;
-
-  @IsOptional()
-  @IsDateString()
-  @IsReturnDateAllowed()
-  returnTime: Date;
+  @IsNotEmpty()
+  timeSlot: string;
 }

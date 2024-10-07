@@ -27,7 +27,8 @@ export class BooksService {
     try {
       const bookDoc = new this.bookModel(createBookDto);
       const book = await bookDoc.save();
-      return book.toObject();
+      const populatedBook = await book.populate(POPULATE_PIPE);
+      return populatedBook.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
