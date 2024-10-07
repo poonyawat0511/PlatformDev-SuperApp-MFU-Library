@@ -20,6 +20,9 @@ importers:
       class-transformer:
         specifier: ^0.5.1
         version: 0.5.1
+      gem_cars:
+        specifier: 'file:'
+        version: 'file:'
       mongoose:
         specifier: ^8.5.3
         version: 8.5.3
@@ -1473,6 +1476,9 @@ packages:
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
+
+  'gem_cars@file:':
+    resolution: {directory: '', type: directory}
 
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
@@ -4565,6 +4571,29 @@ snapshots:
     optional: true
 
   function-bind@1.1.2: {}
+
+  'gem_cars@file:':
+    dependencies:
+      '@nestjs/common': 10.4.1(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.1)
+      '@nestjs/core': 10.4.1(@nestjs/common@10.4.1(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/platform-express@10.4.1)(reflect-metadata@0.2.2)(rxjs@7.8.1)
+      '@nestjs/platform-express': 10.4.1(@nestjs/common@10.4.1(class-transformer@0.5.1)(reflect-metadata@0.2.2)(rxjs@7.8.1))(@nestjs/core@10.4.1)
+      class-transformer: 0.5.1
+      mongoose: 8.5.3
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.1
+    transitivePeerDependencies:
+      - '@aws-sdk/credential-providers'
+      - '@mongodb-js/zstd'
+      - '@nestjs/microservices'
+      - '@nestjs/websockets'
+      - class-validator
+      - encoding
+      - gcp-metadata
+      - kerberos
+      - mongodb-client-encryption
+      - snappy
+      - socks
+      - supports-color
 
   gensync@1.0.0-beta.2: {}
 
