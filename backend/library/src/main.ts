@@ -1,21 +1,19 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import * as morgan from "morgan";
-import * as compression from "compression";
+import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import * as compression from "compression";
 import * as cookieParser from "cookie-parser";
+import * as morgan from "morgan";
+import { AppModule } from "./app.module";
 
 async function bootstrap() {
   // app settings
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix("api");
-  app.enableCors({ origin: "*" });
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
-
   app.enableCors({
-    origin: "http://localhost:3000", // Replace with your frontend URL
+    origin:'*', // Replace with your frontend URL
     credentials: true, // Allow cookies to be included in requests
   });
 

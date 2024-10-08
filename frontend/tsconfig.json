@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./", // Relative to the location of tsconfig.json
+    "paths": {
+      "@shared/*": [
+        "shared/*"
+      ]
+    },
+    "target": "es5",
+    "module": "commonjs",
+    "jsx": "react",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "admin/**/*",
+    "shared/**/*",
+    "user/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
