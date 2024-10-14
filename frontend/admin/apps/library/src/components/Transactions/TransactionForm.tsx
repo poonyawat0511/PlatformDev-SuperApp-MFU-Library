@@ -2,7 +2,10 @@
 import { Book } from "@/utils/BookTypes";
 import { Transaction } from "@/utils/TransactionTypes";
 import { User } from "@/utils/UserTypes";
+import Modal from "@shared/components/Modal";
 import React, { useEffect, useState } from "react";
+import { GrFormClose } from "react-icons/gr";
+import { LiaCheckCircle } from "react-icons/lia";
 
 interface TransactionFormProps {
   transaction: Transaction | null;
@@ -113,14 +116,27 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-6 rounded-lg shadow-md space-y-4 max-w-md mx-auto"
+    <Modal
+    isOpen={true}
+    title={transaction ? "Edit Form" : "Create Form"}
+    onClose={onClose}
+    actions={
+      <div className="flex justify-between">
+        <button
+          onClick={handleSubmit}
+          className="bg-black text-white px-2 py-2 rounded-full"
+        >
+          <LiaCheckCircle className="size-6" />
+        </button>
+        <button
+          onClick={onClose}
+          className="bg-gray-500 text-white px-2 py-2 rounded-full ml-6"
+        >
+          <GrFormClose className="size-6" />
+        </button>
+      </div>
+    }
     >
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">
-        {transaction ? "Edit Transaction" : "Create Transaction"}
-      </h2>
-
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-2">
@@ -201,24 +217,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           />
         </div>
       )}
-
-      <div className="flex justify-between mt-4">
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="bg-blue-500 text-white py-2 px-4 rounded-lg shadow hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-        >
-          {isSubmitting ? "Submitting..." : "Submit"}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="bg-gray-500 text-white py-2 px-4 rounded-lg shadow hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
+    </Modal>
   );
 };
 

@@ -59,8 +59,10 @@ export default function TransactionsPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
-  const [showForm, setShowForm] = useState<boolean>(false);
+  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("borrow");
+  const [searchQuery, setSearchQuery] = useState<string>(""); // State for search query
+  const [statusFilter, setStatusFilter] = useState<string>("all"); // State for status filter
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,9 +77,38 @@ export default function TransactionsPage() {
     fetchData();
   }, []);
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setStatusFilter(e.target.value);
+  };
+
+  // Filter transactions by search query and status
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesSearch =
+      transaction.book?.ISBN?.toLowerCase().includes(
+        searchQuery.toLowerCase()
+      ) ||
+      transaction.user?.username
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "all" || transaction.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleCreate = () => {
+    setSelectedTransaction(null);
+    setIsFormOpen(true);
+  };
+
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
-    setShowForm(true);
+    setIsFormOpen(true);
   };
 
   const handleDelete = async (transactionId: string) => {
@@ -121,70 +152,84 @@ export default function TransactionsPage() {
           transactions.map((t) => (t.id === result.data.id ? result.data : t))
         );
       }
-      setShowForm(false);
+      setIsFormOpen(false);
       setSelectedTransaction(null);
     } catch (error) {
       console.log(error);
     }
   };
 
-  const handleFormClose = () => {
-    setShowForm(false);
-    setSelectedTransaction(null);
-  };
-
-  const handleTabClick = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  // กรอง transactions ตาม status (borrow หรือ return)
-  const filteredTransactions = transactions.filter((transaction) =>
-    activeTab === "borrow" ? transaction.status === "borrow" : transaction.status === "return"
-  );
-
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen p-6">
       <div className="container mx-auto">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">Transactions</h1>
-        <div className="h-16">
-          <nav className="bg-blue-500 w-full h-12 flex flex-row gap-9 justify-center">
-            <button
-              onClick={() => handleTabClick("borrow")}
-              className={`item-center flex hover:bg-blue-700 text-white transition-colors px-4 py-2 ${
-                activeTab === "borrow" ? "bg-black text-white" : ""
-              }`}
-            >
-              Borrow
-            </button>
-            <button
-              onClick={() => handleTabClick("return")}
-              className={`item-center flex hover:bg-blue-700 text-white transition-colors px-4 py-2 ${
-                activeTab === "return" ? "bg-black text-white" : ""
-              }`}
-            >
-              Return
-            </button>
-          </nav>
+        <div className="flex justify-between items-center mb-4 px-4 border-b-2">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800">
+            Transactions
+          </h1>
+          <button
+            onClick={handleCreate}
+            className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
+          >
+            New Transaction
+          </button>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 mb-6"
-        >
-          Create New Transaction
-        </button>
-        {showForm && (
+
+        {/* Search and Filter Section */}
+        <div className="flex items-center justify-between mb-6">
+          {/* Search Input */}
+          <div className="relative w-1/2">
+            <input
+              type="text"
+              placeholder="Search item here"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300"
+            />
+            <svg
+              className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z"
+              />
+            </svg>
+          </div>
+
+          {/* Status Dropdown */}
+          <div className="relative w-1/4">
+            <select
+              value={statusFilter}
+              onChange={handleStatusChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300"
+            >
+              <option value="all">All Transactions</option>
+              <option value="borrow">Borrow</option>
+              <option value="return">Return</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Transactions Table or Form */}
+        {isFormOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
               <TransactionForm
                 transaction={selectedTransaction}
                 onSubmit={handleFormSubmit}
-                onClose={handleFormClose}
+                onClose={() => setIsFormOpen(false)}
                 books={books}
                 users={users}
               />
             </div>
           </div>
         )}
+
         {filteredTransactions.length > 0 ? (
           <TransactionTable
             transactions={filteredTransactions}
