@@ -43,7 +43,7 @@ export class Book {
   })
   status: BookStatus;
 
-  @Prop({ type: Number, required: true, default: 0 })
+  @Prop({ type: Number, required: true, default: 0 ,min: 0 })
   quantity: number;
 
   _id: Types.ObjectId;

@@ -1,7 +1,12 @@
 import { Book } from "@/utils/BookTypes";
 import { Category, LanguageString } from "@/utils/CategoryTypes";
+import Modal from "@shared/components/Modal";
 import { useEffect, useState } from "react";
-
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import * as Icons from "@heroicons/react/24/outline";
+import { tAlertType } from "@shared/utils/types/Alert";
+import { GrFormClose } from "react-icons/gr";
+import { LiaCheckCircle } from "react-icons/lia";
 interface BookFormProps {
   book?: Book | null;
   onSubmit: (formData: FormData) => void;
@@ -9,6 +14,7 @@ interface BookFormProps {
 }
 
 export default function BookForm({ book, onSubmit, onClose }: BookFormProps) {
+  const { addAlert } = useGlobalContext();
   const [name, setName] = useState<LanguageString>({
     en: book?.name?.en || "",
     th: book?.name?.th || "",
@@ -24,7 +30,7 @@ export default function BookForm({ book, onSubmit, onClose }: BookFormProps) {
   );
   const [category, setCategory] = useState<string>(book?.category?.id || "");
   const [status, setStatus] = useState<string>(book?.status || "ready");
-  const [quantity, setQuantity] = useState<number>(book?.quantity || 1);
+  const [quantity, setQuantity] = useState<number>(book?.quantity || 0);
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
@@ -85,32 +91,66 @@ export default function BookForm({ book, onSubmit, onClose }: BookFormProps) {
     formData.append("name[en]", name.en);
     formData.append("description[th]", description.th);
     formData.append("description[en]", description.en);
+    // Validation logic and alerts
     if (ISBN) {
       formData.append("ISBN", ISBN);
     } else {
-      alert("No ISBN");
+      addAlert({
+        title: "No ISBN",
+        message: "Please enter the ISBN number",
+        buttonText: "X",
+        iconName: "XCircleIcon" as keyof typeof Icons,
+        type: tAlertType.ERROR,
+      });
     }
 
     if (category) {
       formData.append("category", category);
     } else {
-      alert("Please select a category");
+      addAlert({
+        title: "Category Missing",
+        message: "Please select a category",
+        buttonText: "X",
+        iconName: "ExclamationCircleIcon" as keyof typeof Icons,
+        type: tAlertType.WARNING,
+      });
       return;
     }
 
     if (["ready", "not ready"].includes(status)) {
       formData.append("status", status);
     } else {
-      alert("Invalid status value");
+      addAlert({
+        title: "Invalid Status",
+        message: "The status value is invalid",
+        buttonText: "X",
+        iconName: "ExclamationCircleIcon" as keyof typeof Icons,
+        type: tAlertType.WARNING,
+      });
       return;
     }
-
-    formData.append("quantity", quantity.toString());
+    if (quantity) {
+      formData.append("quantity", quantity.toString());
+    } else {
+      addAlert({
+        title: "No quantity",
+        message: "plaese fill quantity for Book minimum 0",
+        buttonText: "X",
+        iconName: "PhotographIcon" as keyof typeof Icons,
+        type: tAlertType.WARNING,
+      });
+    }
 
     if (bookImage) {
       formData.append("bookImage", bookImage);
-    } else if (book?.bookImage) {
-      formData.append("bookImage", book.bookImage);
+    } else {
+      addAlert({
+        title: "No Image",
+        message: "Please upload a book image",
+        buttonText: "X",
+        iconName: "PhotographIcon" as keyof typeof Icons,
+        type: tAlertType.WARNING,
+      });
     }
 
     console.log(
@@ -122,108 +162,114 @@ export default function BookForm({ book, onSubmit, onClose }: BookFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
-      <div className="bg-white p-6 rounded shadow-lg w-80">
-        <h2 className="text-xl mb-4">{book ? "Edit Book" : "Create Book"}</h2>
-        {imagePreview && (
-          <div className="mb-4">
-            <img
-              src={imagePreview}
-              alt="Book preview"
-              className="w-full h-40 object-cover"
-            />
-          </div>
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          onChange={handleImageChange}
-          className="border p-2 mb-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="Name (EN)"
-          value={name.en}
-          onChange={(e) => setName({ ...name, en: e.target.value })}
-          className="border p-2 mb-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="Name (TH)"
-          value={name.th}
-          onChange={(e) => setName({ ...name, th: e.target.value })}
-          className="border p-2 mb-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="Description (EN)"
-          value={description.en}
-          onChange={(e) =>
-            setDescription({ ...description, en: e.target.value })
-          }
-          className="border p-2 mb-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="Description (TH)"
-          value={description.th}
-          onChange={(e) =>
-            setDescription({ ...description, th: e.target.value })
-          }
-          className="border p-2 mb-2 w-full"
-        />
-        <input
-          type="text"
-          placeholder="ISBN"
-          value={ISBN}
-          onChange={(e) => setISBN(e.target.value)}
-          className="border p-2 mb-2 w-full"
-        />
-        <select
-          value={category}
-          onChange={handleCategoryChange}
-          className="border p-2 mb-2 w-full"
-        >
-          <option value="">Select Category</option>
-          {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name.en}
-            </option>
-          ))}
-        </select>
-
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="border p-2 mb-2 w-full"
-        >
-          <option value="ready">Ready</option>
-          <option value="not ready">Not Ready</option>
-        </select>
-
-        <input
-          type="number"
-          min="1"
-          value={quantity}
-          onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
-          className="border p-2 mb-4 w-full"
-        />
-
+    <Modal
+      isOpen={true}
+      title={book ? "Edit Form" : "Create Form"}
+      onClose={onClose}
+      actions={
         <div className="flex justify-between">
           <button
             onClick={handleSubmit}
-            className="bg-blue-500 text-white px-4 py-2 rounded"
+            className="bg-black text-white px-2 py-2 rounded-full"
           >
-            Submit
+            <LiaCheckCircle className="size-6" />
           </button>
           <button
             onClick={onClose}
-            className="bg-gray-500 text-white px-4 py-2 rounded"
+            className="bg-gray-500 text-white px-2 py-2 rounded-full ml-6"
           >
-            Cancel
+            <GrFormClose className="size-6" />
           </button>
         </div>
+      }
+    >
+      <div className="border-t-2 border-gray-300 pb-2 mb-4">
+        <div className="mt-4">
+          {imagePreview && (
+            <div className="mb-4">
+              <img
+                src={imagePreview}
+                alt="Book preview"
+                className="w-full h-40 object-cover"
+              />
+            </div>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="border p-2 mb-2 w-full rounded-full"
+          />
+          <input
+            type="text"
+            placeholder="Name (EN)"
+            value={name.en}
+            onChange={(e) => setName({ ...name, en: e.target.value })}
+            className="border p-2 mb-2 w-full rounded-full"
+          />
+          <input
+            type="text"
+            placeholder="Name (TH)"
+            value={name.th}
+            onChange={(e) => setName({ ...name, th: e.target.value })}
+            className="border p-2 mb-2 w-full rounded-full"
+          />
+          <input
+            type="text"
+            placeholder="Description (EN)"
+            value={description.en}
+            onChange={(e) =>
+              setDescription({ ...description, en: e.target.value })
+            }
+            className="border p-2 mb-2 w-full rounded-full"
+          />
+          <input
+            type="text"
+            placeholder="Description (TH)"
+            value={description.th}
+            onChange={(e) =>
+              setDescription({ ...description, th: e.target.value })
+            }
+            className="border p-2 mb-2 w-full rounded-full"
+          />
+          <input
+            type="text"
+            placeholder="ISBN"
+            value={ISBN}
+            onChange={(e) => setISBN(e.target.value)}
+            className="border p-2 mb-2 w-full rounded-full"
+          />
+          <select
+            value={category}
+            onChange={handleCategoryChange}
+            className="border p-2 mb-2 w-full rounded-full"
+          >
+            <option value="">Select Category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name.en}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="border p-2 mb-2 w-full rounded-full"
+          >
+            <option value="ready">Ready</option>
+            <option value="not ready">Not Ready</option>
+          </select>
+
+          <input
+            type="number"
+            min="0"
+            value={quantity}
+            onChange={(e) => setQuantity(parseInt(e.target.value, 10))}
+            className="border p-2 mb-4 w-full rounded-full"
+          />
+        </div>
       </div>
-    </div>
+    </Modal>
   );
 }
