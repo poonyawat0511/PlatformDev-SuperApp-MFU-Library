@@ -6,6 +6,10 @@ import { Transaction } from "../../utils/TransactionTypes";
 import { User } from "../../utils/UserTypes";
 import TransactionForm from "../../components/Transactions/TransactionForm";
 import TransactionTable from "../../components/Transactions/TransactionTable";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
+import * as Icons from "@heroicons/react/24/outline";
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import ConfirmDialog from "@/components/Books/ConfirmDialog";
 
 const apiUrl = `http://localhost:8082/api/transactions`;
 const apiBookUrl = `http://localhost:8082/api/books`;
@@ -60,9 +64,29 @@ export default function TransactionsPage() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>("borrow");
-  const [searchQuery, setSearchQuery] = useState<string>(""); // State for search query
-  const [statusFilter, setStatusFilter] = useState<string>("all"); // State for status filter
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [transactionIdToDelete, setTransactionIdToDelete] = useState<
+    string | null
+  >(null);
+  const { addAlert } = useGlobalContext();
+  const handleAddAlert = (
+    iconName: keyof typeof Icons,
+    title: string,
+    message: string,
+    type: tAlertType
+  ) => {
+    const newAlert: tAlert = {
+      title: title,
+      message: message,
+      buttonText: "X",
+      iconName: iconName,
+      type: type,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    addAlert(newAlert);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,7 +109,6 @@ export default function TransactionsPage() {
     setStatusFilter(e.target.value);
   };
 
-  // Filter transactions by search query and status
   const filteredTransactions = transactions.filter((transaction) => {
     const matchesSearch =
       transaction.book?.ISBN?.toLowerCase().includes(
@@ -111,19 +134,31 @@ export default function TransactionsPage() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (transactionId: string) => {
+  const confirmDelete = (transactionId: string) => {
+    setTransactionIdToDelete(transactionId);
+    setIsConfirmDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!transactionIdToDelete) return;
+  
     try {
-      const response = await fetch(`${apiUrl}/${transactionId}`, {
+      const response = await fetch(`${apiUrl}/${transactionIdToDelete}`, {
         method: "DELETE",
       });
       if (!response.ok) {
         throw new Error("Failed to delete transaction");
       }
-      setTransactions(transactions.filter((t) => t.id !== transactionId));
+      setTransactions(transactions.filter((t) => t.id !== transactionIdToDelete));
+      handleAddAlert("ExclamationCircleIcon", "Success", "Transaction deleted successfully", tAlertType.SUCCESS);
     } catch (error) {
       console.log(error);
+    } finally {
+      setIsConfirmDialogOpen(false);
+      setTransactionIdToDelete(null);
     }
   };
+  
 
   const handleFormSubmit = async (formData: Transaction) => {
     try {
@@ -153,6 +188,12 @@ export default function TransactionsPage() {
         );
       }
       setIsFormOpen(false);
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        "Transaction updated successfully",
+        tAlertType.SUCCESS
+      );
       setSelectedTransaction(null);
     } catch (error) {
       console.log(error);
@@ -174,9 +215,7 @@ export default function TransactionsPage() {
           </button>
         </div>
 
-        {/* Search and Filter Section */}
         <div className="flex items-center justify-between mb-6">
-          {/* Search Input */}
           <div className="relative w-1/2">
             <input
               type="text"
@@ -201,7 +240,6 @@ export default function TransactionsPage() {
             </svg>
           </div>
 
-          {/* Status Dropdown */}
           <div className="relative w-1/4">
             <select
               value={statusFilter}
@@ -215,7 +253,6 @@ export default function TransactionsPage() {
           </div>
         </div>
 
-        {/* Transactions Table or Form */}
         {isFormOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -234,7 +271,7 @@ export default function TransactionsPage() {
           <TransactionTable
             transactions={filteredTransactions}
             onEdit={handleEdit}
-            onDelete={handleDelete}
+            onDelete={confirmDelete}
           />
         ) : (
           <div className="text-center text-gray-500">
@@ -242,6 +279,12 @@ export default function TransactionsPage() {
           </div>
         )}
       </div>
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        onConfirm={handleDelete}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        message="Are you sure you want to delete this transaction?"
+      />
     </div>
   );
 }

@@ -3,9 +3,12 @@ import { Book } from "@/utils/BookTypes";
 import { Transaction } from "@/utils/TransactionTypes";
 import { User } from "@/utils/UserTypes";
 import Modal from "@shared/components/Modal";
+import { useGlobalContext } from "@shared/context/GlobalContext";
 import React, { useEffect, useState } from "react";
 import { GrFormClose } from "react-icons/gr";
 import { LiaCheckCircle } from "react-icons/lia";
+import * as Icons from "@heroicons/react/24/outline";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 
 interface TransactionFormProps {
   transaction: Transaction | null;
@@ -32,13 +35,25 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       status: "",
       quantity: 0,
     },
-    status: "borrow" || "return",
+    status:"return",
     dueDate: "",
     borrowDate: "",
     returnDate: null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { addAlert } = useGlobalContext();
+  const handleAddAlert = (iconName: keyof typeof Icons, title: string, message: string, type: tAlertType) => {
+    const newAlert: tAlert = {
+      title: title,
+      message: message,
+      buttonText: "X",
+      iconName: iconName,
+      type: type,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    addAlert(newAlert);
+  };
 
   useEffect(() => {
     if (transaction) {
@@ -50,25 +65,34 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
-
+  
+    if (!formData.user.username) {
+      handleAddAlert("ExclamationCircleIcon", "Username Missing", "Username is required" ,tAlertType.WARNING);
+      setIsSubmitting(false);
+      return;
+    }
+    
+    if (!formData.book.ISBN) {
+      handleAddAlert("ExclamationCircleIcon", "ISBN Missing", "ISBN is required", tAlertType.WARNING);
+      setIsSubmitting(false);
+      return;
+    }
+  
     try {
-      // Check if we're updating or creating a new transaction
       const isEditing = !!transaction?.id;
-
-      // Send form data with `username` and `ISBN` as strings, along with the id if editing
+  
       await onSubmit({
-        id: isEditing ? transaction.id : undefined, // Include the id for update
-        user: formData.user.username, // Send username as string
-        book: formData.book.ISBN, // Send ISBN as string
+        id: isEditing ? transaction.id : undefined,
+        user: formData.user.username,
+        book: formData.book.ISBN,
         status: formData.status,
         dueDate: new Date(formData.dueDate).toISOString(),
         borrowDate: new Date(formData.borrowDate).toISOString(),
         returnDate: formData.returnDate
           ? new Date(formData.returnDate).toISOString()
           : null,
-      } as any); // Type-cast if necessary to avoid TypeScript errors
-
-      // Reset form data after submission
+      } as any);
+  
       setFormData({
         user: { id: "", email: "", username: "", password: "" },
         book: {
@@ -81,12 +105,11 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
           status: "",
           quantity: 0,
         },
-        status: "borrow" || "return",
+        status:"return",
         dueDate: "",
         borrowDate: "",
         returnDate: null,
       });
-
       onClose();
     } catch (error) {
       setError("Failed to submit transaction. Please check the form inputs.");
@@ -94,6 +117,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
       setIsSubmitting(false);
     }
   };
+  
 
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -103,12 +127,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
     if (name === "username") {
       setFormData({
         ...formData,
-        user: { ...formData.user, username: value }, // Update nested user.username
+        user: { ...formData.user, username: value },
       });
     } else if (name === "ISBN") {
       setFormData({
         ...formData,
-        book: { ...formData.book, ISBN: value }, // Update nested book.ISBN
+        book: { ...formData.book, ISBN: value },
       });
     } else {
       setFormData({ ...formData, [name]: value });
@@ -143,7 +167,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         <label className="block text-gray-700 font-medium">Username</label>
         <input
           type="text"
-          name="username" // Adjusted name
+          name="username"
           value={formData.user.username}
           onChange={handleChange}
           placeholder="Enter username"
@@ -156,7 +180,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         <label className="block text-gray-700 font-medium">ISBN</label>
         <input
           type="text"
-          name="ISBN" // Adjusted name
+          name="ISBN"
           value={formData.book.ISBN}
           onChange={handleChange}
           placeholder="Enter ISBN"
@@ -204,7 +228,6 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         />
       </div>
 
-      {/* Conditionally render the Return Date field if the status is "return" */}
       {formData.status === "return" && (
         <div className="space-y-2">
           <label className="block text-gray-700 font-medium">Return Date</label>

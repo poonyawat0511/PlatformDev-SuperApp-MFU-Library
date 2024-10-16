@@ -88,7 +88,7 @@ export default function BookPage() {
           "Book deleted successfully",
           tAlertType.SUCCESS
         );
-        setIsConfirmDialogOpen(false); // Close dialog on successful deletion
+        setIsConfirmDialogOpen(false);
       } catch (error) {
         console.error("Failed to delete book:", error);
         handleAddAlert(
@@ -177,7 +177,7 @@ export default function BookPage() {
         <h1 className="text-3xl font-bold">List All Books</h1>
         <button
           onClick={handleCreate}
-          className="px-4 py-2 mb-4 bg-black rounded-full text-white"
+          className="px-4 py-2 mb-4 bg-black rounded-full text-white shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
         >
           Add new Book
         </button>
