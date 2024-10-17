@@ -277,6 +277,22 @@ export class ReservationsService {
         }
       }
 
+      // If the username is being updated, find the user by new username
+    if (updateReservationDto.user) {
+      const user = await this.userModel.findOne({
+        username: updateReservationDto.user,
+      });
+      if (!user) {
+        throw new NotFoundException(
+          `User with username ${updateReservationDto.user} not found`
+        );
+      }
+
+      // Update user reference
+      updateReservationDto.user = user._id;
+    }
+
+
       // Handle status change to "cancelled"
       if (
         reservation.type === reservationType.pending &&
