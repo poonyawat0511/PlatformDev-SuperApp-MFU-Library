@@ -1,15 +1,16 @@
 "use client";
 
+import ConfirmDialog from "@/components/Reservations/ConfirmDialog";
+import ReservationForm from "@/components/Reservations/ReservationForm";
+import ReservationTable from "@/components/Reservations/ReservationTable";
 import { Reservation } from "@/utils/ReservationType";
 import { Room } from "@/utils/RoomTypes";
+import { Timeslot } from "@/utils/TimeslotType";
 import { User } from "@/utils/UserTypes";
+import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import * as Icons from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import ReservationTable from "@/components/Reservations/ReservationTable";
-import ReservationForm from "@/components/Reservations/ReservationForm";
-import { Timeslot } from "@/utils/TimeslotType";
 
 const apiUrl = `http://localhost:8082/api/reservations`;
 const apiRoomUrl = `http://localhost:8082/api/rooms`;
@@ -235,12 +236,12 @@ export default function ReservationPage() {
           />
         </div>
       </div>
-      {/* <ConfirmDialog
+      <ConfirmDialog
       isOpen={isConfirmDialogOpen}
       onConfirm={handleDelete}
       onClose={() => setIsConfirmDialogOpen(false)}
       message="Are you sure you want to delete this transaction?"
-    /> */}
+    />
     </div>
   );
 }
