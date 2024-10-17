@@ -18,6 +18,22 @@ import { CreateReservationDto } from "./dto/create-reservation.dto";
 import { UpdateReservationDto } from "./dto/update-reservation.dto";
 import { reservationType } from "./enums/reservation.enum";
 import { Reservation } from "./schemas/reservation.schema";
+import { User } from "src/users/schemas/user.schema";
+
+const POPULATE_PIPE = [
+  {
+    path: "room",
+    select: ["room"],
+  },
+  {
+    path: "user",
+    select: ["username"],
+  },
+  {
+    path: "timeSlot",
+    select: ["start", "end"],
+  },
+];
 
 @Injectable()
 export class ReservationsService {
@@ -29,7 +45,9 @@ export class ReservationsService {
     @InjectModel(Room.name)
     private readonly roomModel: Model<Room>,
     @InjectModel(RoomTimeSlot.name)
-    private readonly roomTimeSlotModel: Model<RoomTimeSlot>
+    private readonly roomTimeSlotModel: Model<RoomTimeSlot>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<User>
   ) {}
 
   // 1. Create reservation with default "pending" status
@@ -53,14 +71,24 @@ export class ReservationsService {
       if (roomTimeSlot.status !== RoomTimeSlotStatus.free) {
         throw new ConflictException("RoomTimeSlot is not available");
       }
+      // Find the user by username
+      const user = await this.userModel.findOne({
+        username: createReservationDto.user,
+      });
+      if (!user) {
+        throw new NotFoundException(
+          `User with username ${createReservationDto.user} not found`
+        );
+      }
 
       // Update RoomTimeSlot status to "reserved"
       roomTimeSlot.status = RoomTimeSlotStatus.reserved;
       await roomTimeSlot.save();
 
       // Create and save the reservation
-      const reservationDoc = new this.reservationModel(createReservationDto);
+      const reservationDoc = new this.reservationModel({...createReservationDto,user:user._id,});
       const reservation = await reservationDoc.save();
+      const populatedReservation = await reservation.populate(POPULATE_PIPE);
 
       // Schedule timeout based on Timeslot start time
       this.scheduleTimeout(
@@ -70,7 +98,7 @@ export class ReservationsService {
         roomTimeSlot.timeSlot as Timeslot
       );
 
-      return reservation.toObject();
+      return populatedReservation.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -184,13 +212,19 @@ export class ReservationsService {
   }
 
   async findAll(): Promise<Reservation[]> {
-    const reservations = await this.reservationModel.find().lean();
+    const reservations = await this.reservationModel
+      .find()
+      .lean()
+      .populate(POPULATE_PIPE);
     return reservations;
   }
 
   async findOne(id: string): Promise<Reservation> {
     try {
-      const reservation = await this.reservationModel.findById(id).lean();
+      const reservation = await this.reservationModel
+        .findById(id)
+        .lean()
+        .populate(POPULATE_PIPE);
       if (!reservation) {
         throw new NotFoundException(
           this.errorBuilder.build(ErrorMethod.notFound, { id })
