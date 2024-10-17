@@ -310,6 +310,7 @@ export class ReservationsService {
 
       const updatedReservation = await this.reservationModel
         .findByIdAndUpdate(id, updateReservationDto, { new: true })
+        .populate(POPULATE_PIPE)
         .lean();
       return updatedReservation;
     } catch (error) {

@@ -1,6 +1,4 @@
 "server client";
-import { Book } from "@/utils/BookTypes";
-import { Transaction } from "@/utils/TransactionTypes";
 import { User } from "@/utils/UserTypes";
 import Modal from "@shared/components/Modal";
 import { useGlobalContext } from "@shared/context/GlobalContext";
@@ -11,6 +9,7 @@ import * as Icons from "@heroicons/react/24/outline";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { Room } from "@/utils/RoomTypes";
 import { Reservation } from "@/utils/ReservationType";
+import { Timeslot } from "@/utils/TimeslotType";
 
 interface ReservationFormProps {
   reservation: Reservation | null;
@@ -18,6 +17,7 @@ interface ReservationFormProps {
   onClose: () => void;
   rooms: Room[];
   users: User[];
+  timeSlot: Timeslot[];
 }
 
 const ReservationForm: React.FC<ReservationFormProps> = ({
@@ -26,7 +26,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   onClose,
 }) => {
   const [formData, setFormData] = useState<Reservation>({
-    id:"",
+    id: "",
     room: {
       id: "",
       room: 0,
@@ -41,6 +41,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [timeslots, setTimeslots] = useState<Timeslot[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+
   const { addAlert } = useGlobalContext();
   const handleAddAlert = (
     iconName: keyof typeof Icons,
@@ -58,6 +61,34 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     };
     addAlert(newAlert);
   };
+
+  useEffect(() => {
+    async function fetchTimeSlots() {
+      try {
+        const response = await fetch("http://localhost:8082/api/timeslots");
+        const result = await response.json();
+        console.log("Fetched timeslots:", result.data);
+        setTimeslots(result.data);
+      } catch (error) {
+        console.error("Failed to fetch timeslots", error);
+      }
+    }
+
+    fetchTimeSlots();
+
+    async function fetchRooms() {
+      try {
+        const response = await fetch("http://localhost:8082/api/rooms");
+        const result = await response.json();
+        console.log("Fetched rooms:", result.data);
+        setRooms(result.data);
+      } catch (error) {
+        console.error("Failed to fetch rooms", error);
+      }
+    }
+    fetchRooms();
+    fetchTimeSlots();
+  }, []);
 
   useEffect(() => {
     if (reservation) {
@@ -81,11 +112,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       return;
     }
 
-    if (!formData.room.room) {
+    if (!formData.room.id) {
       handleAddAlert(
         "ExclamationCircleIcon",
-        "ISBN Missing",
-        "ISBN is required",
+        "Room Missing",
+        "Room is required",
         tAlertType.WARNING
       );
       setIsSubmitting(false);
@@ -97,15 +128,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
 
       await onSubmit({
         id: isEditing ? reservation.id : undefined,
-        room: formData.room.room,
+        room: formData.room.id,
         user: formData.user.username,
         type: formData.type,
-        timeSlot: formData.timeSlot,
-        dateTime: new Date(formData.dateTime).toISOString(),
+        timeSlot: formData.timeSlot.id,
       } as any);
 
       setFormData({
-        id:"",
+        id: "",
         room: {
           id: "",
           room: 0,
@@ -130,22 +160,37 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = event.target;
-  
+
     if (name === "username") {
       setFormData({
         ...formData,
         user: { ...formData.user, username: value },
       });
     } else if (name === "room") {
+      const selectedRoom = rooms.find((room) => room.id === value);
+      if (selectedRoom) {
+        setFormData({
+          ...formData,
+          room: selectedRoom,
+        });
+      }
+    } else if (name === "timeSlot") {
+      const selectedTimeSlot = timeslots.find((slot) => slot.id === value);
+      if (selectedTimeSlot) {
+        setFormData({
+          ...formData,
+          timeSlot: selectedTimeSlot,
+        });
+      }
+    } else if (name === "status") {
       setFormData({
         ...formData,
-        room: { ...formData.room, room: Number(value) },
+        type: "pending",
       });
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
-  
 
   return (
     <Modal
@@ -185,29 +230,55 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Room</label>
-        <input
-          type="text"
+        <label className="block text-gray-700 font-medium">Select Room</label>
+        <select
           name="room"
-          value={formData.room.room}
+          value={formData.room.id || ""}
           onChange={handleChange}
-          placeholder="Enter ISBN"
           required
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
-        />
+        >
+          <option value="" disabled>
+            Select a room
+          </option>
+          {rooms.map((room) => (
+            <option key={room.id} value={room.id}>
+              {room.room} - {room.type.name.en}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-medium">Select Time</label>
+        <select
+          name="timeSlot"
+          value={formData.timeSlot.id}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+        >
+          {timeslots.map((time) => (
+            <option key={time.id} value={time.id}>
+              {time.start} - {time.end}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-2">
         <label className="block text-gray-700 font-medium">Status</label>
         <select
-          name="status"
+          name="type"
           value={formData.type}
           onChange={handleChange}
           required
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ri ng focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="">Select status</option>
-          <option value="borrow">pending</option>
+          <option value="pending">pending</option>
+          <option value="confirmed">conmirmed</option>
+          <option value="cancelled">cancelled</option>
         </select>
       </div>
     </Modal>
