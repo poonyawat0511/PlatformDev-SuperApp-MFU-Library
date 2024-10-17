@@ -45,7 +45,7 @@ export default function RoomForm({ room, onSubmit, onClose }: RoomFormProps) {
       id: room?.id || "",
       room: roomNumber,
       floor,
-      status,
+      status:"ready",
       type: type,
     };
 

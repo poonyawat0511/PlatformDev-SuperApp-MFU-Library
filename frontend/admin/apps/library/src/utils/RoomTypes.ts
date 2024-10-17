@@ -4,7 +4,7 @@ export interface Room {
   id: string;
   room: number;
   floor: number;
-  status: string;
+  status: "ready"|"not ready";
   type: RoomType;
 }
 
