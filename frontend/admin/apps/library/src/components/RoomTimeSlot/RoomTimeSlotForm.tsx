@@ -1,8 +1,7 @@
 "server client";
-import { Reservation } from "@/utils/ReservationType";
+import { RoomTimeSlot } from "@/utils/RoomTimeSlot";
 import { Room } from "@/utils/RoomTypes";
 import { Timeslot } from "@/utils/TimeslotType";
-import { User } from "@/utils/UserTypes";
 import * as Icons from "@heroicons/react/24/outline";
 import Modal from "@shared/components/Modal";
 import { useGlobalContext } from "@shared/context/GlobalContext";
@@ -11,22 +10,20 @@ import React, { useEffect, useState } from "react";
 import { GrFormClose } from "react-icons/gr";
 import { LiaCheckCircle } from "react-icons/lia";
 
-interface ReservationFormProps {
-  reservation: Reservation | null;
-  onSubmit: (formData: Reservation) => Promise<void>;
+interface RoomTimeSlotFormProps {
+  roomTimeSlot: RoomTimeSlot | null;
+  onSubmit: (formData: RoomTimeSlot) => Promise<void>;
   onClose: () => void;
   rooms: Room[];
-  users: User[];
   timeSlot: Timeslot[];
 }
 
-const ReservationForm: React.FC<ReservationFormProps> = ({
-  reservation,
+const RoomTimeSlotForm: React.FC<RoomTimeSlotFormProps> = ({
+  roomTimeSlot,
   onSubmit,
   onClose,
 }) => {
-  const [formData, setFormData] = useState<Reservation>({
-    id: "",
+  const [formData, setFormData] = useState<RoomTimeSlot>({
     room: {
       id: "",
       room: 0,
@@ -34,10 +31,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       status: "ready",
       type: { id: "", name: { th: "", en: "" } },
     },
-    user: { id: "", email: "", username: "", password: "" },
-    type: "pending",
     timeSlot: { id: "", start: "", end: "" },
-    dateTime: "",
+    status: "free",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,26 +86,15 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
   }, []);
 
   useEffect(() => {
-    if (reservation) {
-      setFormData(reservation);
+    if (roomTimeSlot) {
+      setFormData(roomTimeSlot);
     }
-  }, [reservation]);
+  }, [roomTimeSlot]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
-
-    if (!formData.user.username) {
-      handleAddAlert(
-        "ExclamationCircleIcon",
-        "Username Missing",
-        "Username is required",
-        tAlertType.WARNING
-      );
-      setIsSubmitting(false);
-      return;
-    }
 
     if (!formData.room.id) {
       handleAddAlert(
@@ -124,18 +108,16 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     }
 
     try {
-      const isEditing = !!reservation?.id;
+      const isEditing = !!roomTimeSlot?.id;
 
       await onSubmit({
-        id: isEditing ? reservation.id : undefined,
+        id: isEditing ? roomTimeSlot.id : undefined,
         room: formData.room.id,
-        user: formData.user.username,
-        type: formData.type,
         timeSlot: formData.timeSlot.id,
+        status: formData.status,
       } as any);
 
       setFormData({
-        id: "",
         room: {
           id: "",
           room: 0,
@@ -143,14 +125,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
           status: "ready",
           type: { id: "", name: { th: "", en: "" } },
         },
-        user: { id: "", email: "", username: "", password: "" },
-        type: "pending",
         timeSlot: { id: "", start: "", end: "" },
-        dateTime: "",
+        status: "free",
       });
       onClose();
     } catch (error) {
-      setError("Failed to submit reservation. Please check the form inputs.");
+      setError(
+        "Failed to submit room time slot. Please check the form inputs."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -160,13 +142,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = event.target;
-
-    if (name === "username") {
-      setFormData({
-        ...formData,
-        user: { ...formData.user, username: value },
-      });
-    } else if (name === "room") {
+  
+    if (name === "room") {
       const selectedRoom = rooms.find((room) => room.id === value);
       if (selectedRoom) {
         setFormData({
@@ -185,17 +162,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
     } else if (name === "status") {
       setFormData({
         ...formData,
-        type: "pending",
+        status: value as "free" | "in use" | "reserved", // Update the status with the selected value
       });
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
+  
+  
+  
 
   return (
     <Modal
       isOpen={true}
-      title={reservation ? "Edit Form" : "Create Form"}
+      title={roomTimeSlot ? "Edit Form" : "Create Form"}
       onClose={onClose}
       actions={
         <div className="flex justify-between">
@@ -217,26 +197,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">Username</label>
-        <input
-          type="text"
-          name="username"
-          value={formData.user.username}
-          onChange={handleChange}
-          placeholder="Enter username"
-          required
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
-        />
-      </div>
-
-      <div className="space-y-2">
         <label className="block text-gray-700 font-medium">Select Room</label>
         <select
           name="room"
           value={formData.room.id || ""}
           onChange={handleChange}
           required
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+          className="w-full p-2 border border-gray-300 rounded-full focus:ring focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="" disabled>
             Select a room
@@ -256,7 +223,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
           value={formData.timeSlot.id || ""}
           onChange={handleChange}
           required
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+          className="w-full p-2 border border-gray-300 rounded-full focus:ring focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="" disabled>
             Select a time
@@ -272,20 +239,20 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
       <div className="space-y-2">
         <label className="block text-gray-700 font-medium">Status</label>
         <select
-          name="type"
-          value={formData.type}
+          name="status"
+          value={formData.status}
           onChange={handleChange}
           required
-          className="w-full p-2 border border-gray-300 rounded-lg focus:ri ng focus:ring-blue-200 focus:border-blue-500"
+          className="w-full p-2 border border-gray-300 rounded-full focus:ri ng focus:ring-blue-200 focus:border-blue-500"
         >
           <option value="">Select status</option>
-          <option value="pending">pending</option>
-          <option value="confirmed">confirmed</option>
-          <option value="cancelled">cancelled</option>
+          <option value="free">free</option>
+          <option value="reserved">reserved</option>
+          <option value="in use">in use</option>
         </select>
       </div>
     </Modal>
   );
 };
 
-export default ReservationForm;
+export default RoomTimeSlotForm;
