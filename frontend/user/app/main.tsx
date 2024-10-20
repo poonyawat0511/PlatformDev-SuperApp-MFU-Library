@@ -19,7 +19,7 @@ export default function Main() {
           tabBarInactiveTintColor: '#303030',
           tabBarLabelStyle: { fontSize: 12 },
           tabBarStyle: { backgroundColor: '#ffdada' },
-          
+          swipeEnabled: false,   
         }}
       >
         <Tab.Screen
@@ -30,7 +30,7 @@ export default function Main() {
         <Tab.Screen
           name="RoomReservation"
           component={RoomReservation}
-          options={{ tabBarLabel: 'Room Reservation' }}
+          options={{ tabBarLabel: 'Room' }}
         />
         <Tab.Screen
           name="Profile"

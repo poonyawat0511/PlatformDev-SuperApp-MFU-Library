@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, Button, Alert } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Modal, Button, Alert } from 'react-native';
 import axios from 'axios';
 
 interface TimeSlot {
@@ -32,25 +32,27 @@ export default function RoomReservation() {
   const [selectedSlot, setSelectedSlot] = useState<{ roomId: string; timeSlotId: string } | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [user, setUser] = useState<{ username: string } | null>(null);
+  const [refresh, setRefresh] = useState(false); // State to trigger data refresh
 
+  // Fetch data on mount and when refresh changes
   useEffect(() => {
     const fetchTimeSlots = async () => {
-      const response = await axios.get('http://localhost:8082/api/timeslots/');
+      const response = await axios.get('http://192.168.1.37:8082/api/timeslots/');
       setTimeSlots(response.data.data);
     };
 
     const fetchRooms = async () => {
-      const response = await axios.get('http://localhost:8082/api/rooms/');
+      const response = await axios.get('http://192.168.1.37:8082/api/rooms/');
       setRooms(response.data.data);
     };
 
     const fetchRoomTimeSlots = async () => {
-      const response = await axios.get('http://localhost:8082/api/room-timeslots/');
+      const response = await axios.get('http://192.168.1.37:8082/api/room-timeslots/');
       setRoomTimeSlots(response.data.data);
     };
 
     const fetchUser = async () => {
-      const response = await axios.get('http://localhost:8082/api/users/profile');
+      const response = await axios.get('http://192.168.1.37:8082/api/users/profile');
       setUser(response.data);
     };
 
@@ -58,7 +60,7 @@ export default function RoomReservation() {
     fetchRooms();
     fetchRoomTimeSlots();
     fetchUser();
-  }, []);
+  }, [refresh]); // Trigger re-fetch when refresh state changes
 
   const handleCellClick = (room: Room, timeSlot: TimeSlot) => {
     const slot = roomTimeSlots.find(
@@ -74,7 +76,7 @@ export default function RoomReservation() {
   const handleReservation = async () => {
     if (selectedSlot && user) {
       try {
-        await axios.post('http://localhost:8082/api/reservations/', {
+        await axios.post('http://192.168.1.37:8082/api/reservations/', {
           room: selectedSlot.roomId,
           user: user.username,
           type: 'pending',
@@ -82,6 +84,7 @@ export default function RoomReservation() {
         });
         Alert.alert('Reservation successful');
         setModalVisible(false); // Close the modal
+        setRefresh(!refresh); // Trigger data refresh
       } catch (error) {
         console.error('Reservation failed:', error);
         Alert.alert('Reservation failed');
@@ -89,53 +92,106 @@ export default function RoomReservation() {
     }
   };
 
-  return (
-    <View style={{ flex: 1, padding: 10 }}>
-      <Text style={{ fontWeight: 'bold', fontSize: 16 }}>Room/Time</Text>
-      <View>
-        <View style={{ flexDirection: 'row' }}>
-          <Text style={{ flex: 1 }}>Room/Time</Text>
-          {timeSlots.map((timeSlot) => (
-            <Text key={timeSlot.id} style={{ flex: 1, textAlign: 'center' }}>
-              {timeSlot.start} - {timeSlot.end}
-            </Text>
-          ))}
-        </View>
+  const handleCancel = () => {
+    setModalVisible(false); // Close the modal
+    setRefresh(!refresh); // Trigger data refresh
+  };
 
-        {rooms.map((room) => (
-          <View key={room.id} style={{ flexDirection: 'row', marginVertical: 5 }}>
-            <Text style={{ flex: 1 }}>{room.type.name.en} {room.room}</Text>
-            {timeSlots.map((timeSlot) => (
-              <TouchableOpacity
-                key={timeSlot.id}
-                style={{ flex: 1, padding: 10, backgroundColor: '#eaeaea', marginHorizontal: 2 }}
-                onPress={() => handleCellClick(room, timeSlot)}
-              >
-                <Text style={{ textAlign: 'center' }}>
-                  {roomTimeSlots.find(
-                    (rts) => rts.room.id === room.id && rts.timeSlot.id === timeSlot.id
-                  )?.status || 'N/A'}
-                </Text>
-              </TouchableOpacity>
+  return (
+    <View>
+      {/* Text and Image Above Table */}
+      <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
+        <Image source={require('../assets/images/RoomRuleBanner.png')} style={{ width: 350, height: 100 }} />
+      </View>
+      <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Room Reservation</Text>
+      </View>
+      <ScrollView horizontal>
+        <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
+          {/* Table Headers */}
+          <View style={styles.tableRow}>
+            <Text style={styles.headerCell}>Room/Time</Text>
+            {timeSlots.map((slot) => (
+              <Text key={slot.id} style={styles.headerCell}>
+                {slot.start} - {slot.end}
+              </Text>
             ))}
           </View>
-        ))}
-      </View>
 
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <View style={{ padding: 20, backgroundColor: 'white', borderRadius: 10 }}>
-            <Text>Confirm Reservation for Room {selectedSlot?.roomId} and Time Slot {selectedSlot?.timeSlotId}</Text>
-            <Button title="Confirm" onPress={handleReservation} />
-            <Button title="Cancel" onPress={() => setModalVisible(false)} />
-          </View>
+          {/* Table Content */}
+          {rooms.map((room) => (
+            <View key={room.id} style={styles.tableRow}>
+              <Text style={styles.headerCell}>{room.type.name.en} {room.room}</Text>
+              {timeSlots.map((timeSlot) => {
+                const slot = roomTimeSlots.find(
+                  (rts) => rts.room.id === room.id && rts.timeSlot.id === timeSlot.id
+                );
+
+                return (
+                  <TouchableOpacity
+                    key={timeSlot.id}
+                    style={[
+                      styles.cell,
+                      slot?.status === 'free' ? styles.freeCell : styles.occupiedCell,
+                    ]}
+                    onPress={() => handleCellClick(room, timeSlot)}
+                  >
+                    <Text style={styles.cellText}>{slot?.status}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          ))}
+
+          {/* Confirmation Modal */}
+          <Modal visible={modalVisible} transparent={true} animationType="slide">
+            <View style={styles.modal}>
+              <Text>Confirm Reservation for </Text>
+              <Text>Room {selectedSlot?.roomId}</Text>
+              <Text>Time Slot {selectedSlot?.timeSlotId}</Text>
+              <Text></Text>
+              <Button title="Confirm" onPress={handleReservation} />
+              <Text></Text>
+              <Button title="Cancel" onPress={handleCancel} />
+            </View>
+          </Modal>
         </View>
-      </Modal>
+      </ScrollView>
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  tableRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  headerCell: {
+    padding: 10,
+    backgroundColor: 'gray',
+    width: 120,  // Fixed width to match the content cells
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  cell: {
+    width: 120,  // Fixed width to match the headers
+    padding: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cellText: {
+    color: 'white',
+  },
+  freeCell: {
+    backgroundColor: 'green',
+  },
+  occupiedCell: {
+    backgroundColor: 'red',
+  },
+  modal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(219, 174, 20, 1)',
+  },
+});
