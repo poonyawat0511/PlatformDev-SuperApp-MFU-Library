@@ -1,38 +1,64 @@
-"server client";
 import { Renew } from "@/utils/RenewType";
+import { BsTrashFill } from "react-icons/bs";
+import { FaTimes } from "react-icons/fa";
+import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
 interface RenewTableProps {
-  renew: Renew;
-  onEdit: (renew: Renew) => void;
+  renews: Renew[];
+  onUpdateStatus: (renewId: string, status: string) => void;
   onDelete: (renewId: string) => void;
 }
 
 export default function RenewTable({
-  renew,
-  onEdit,
+  renews,
+  onUpdateStatus,
   onDelete,
 }: RenewTableProps) {
   return (
-    <div className="max-w-sm w-full h-85 rounded overflow-hidden shadow-lg m-2">
-      <div className="px-4 py-2">
-        <div className="font-bold text-lg mb-1">{renew.status}</div>
-        <p className="text-gray-700 text-sm">{renew.transaction.id}</p>
-      </div>
-      <div className="px-4 pt-2 pb-2"></div>
-      <div className="flex justify-between px-4 py-2">
-        <button
-          onClick={() => onEdit(renew)}
-          className="bg-yellow-500 text-white px-2 py-1 rounded"
-        >
-          Edit
-        </button>
-        <button
-          onClick={() => onDelete(renew.id)}
-          className="bg-red-500 text-white px-2 py-1 rounded"
-        >
-          Delete
-        </button>
-      </div>
+    <div className="overflow-x-auto">
+      <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
+        <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+          <tr>
+            <th className="px-6 py-3 text-center">User</th>
+            <th className="px-6 py-3 text-center">Book ISBN</th>
+            <th className="px-6 py-3 text-center">Status</th>
+            <th className="px-6 py-3 text-center">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="text-gray-700">
+          {renews.map((renew) => {
+            return (
+              <tr key={renew.id} className="border-b hover:bg-gray-50">
+                <td className="px-6 py-4 text-center">
+                  {renew.transaction.user?.username}
+                </td>
+                <td className="px-6 py-4 capitalize text-center">
+                  {renew.transaction.book.ISBN || "-"}
+                </td>
+                <td className="px-6 py-4 capitalize text-center">
+                  {renew.status || "-"}
+                </td>
+                <td className="px-6 py-4 flex space-x-2 text-center justify-center">
+                  <button
+                    onClick={() => onUpdateStatus(renew.id, "approved")}
+                    style={{ backgroundColor: "#6DDABE", color: "white" }}
+                    className="px-2 py-2 rounded-full border border-gray"
+                  >
+                    <IoMdCheckmarkCircleOutline className="size-5" />
+                  </button>
+                  <button
+                    onClick={() => onUpdateStatus(renew.id, "rejected")}
+                    style={{ backgroundColor: "#EF5A6F", color: "white" }}
+                    className="px-2 py-2 rounded-full border border-gray"
+                  >
+                    <FaTimes className="size-5" />
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }

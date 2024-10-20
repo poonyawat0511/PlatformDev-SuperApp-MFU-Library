@@ -4,8 +4,8 @@ import { LiaPenFancySolid } from "react-icons/lia";
 
 interface TimeslotTableProps {
   timeslots: Timeslot[];
-  onEdit: (transaction: Timeslot) => void;
-  onDelete: (transactionId: string) => void;
+  onEdit: (timeslot: Timeslot) => void;
+  onDelete: (timeslotId: string) => void;
 }
 
 export default function TimeslotTable({

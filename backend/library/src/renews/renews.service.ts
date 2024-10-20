@@ -26,6 +26,14 @@ const POPULATE_PIPE = [
       select: ["name.en", "name.th", "ISBN"],
     },
   },
+  {
+    path: "transaction",
+    select: ["user"],
+    populate: {
+      path: "user",
+      select: ["username"],
+    },
+  },
 ];
 
 @Injectable()
@@ -52,7 +60,8 @@ export class RenewsService {
 
       const renewDoc = new this.renewModel(createRenewDto);
       const renew = await renewDoc.save();
-      return renew.toObject();
+      const populateRenew = await renew.populate(POPULATE_PIPE)
+      return populateRenew.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -130,7 +139,7 @@ export class RenewsService {
 
     const options = { new: true };
     const updatedRenew = await this.renewModel
-      .findByIdAndUpdate(id, updateRenewDto, options)
+      .findByIdAndUpdate(id, updateRenewDto, options).populate(POPULATE_PIPE)
       .lean();
 
     return updatedRenew;

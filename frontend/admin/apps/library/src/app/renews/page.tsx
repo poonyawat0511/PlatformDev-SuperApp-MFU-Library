@@ -1,10 +1,12 @@
 "use client";
 
+import { Transaction } from "@/utils/TransactionTypes";
+import * as Icons from "@heroicons/react/24/outline";
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { useEffect, useState } from "react";
-import { Renew } from "../../utils/RenewType";
-import RenewForm from "../../components/Renews/RenewForm";
 import RenewTable from "../../components/Renews/RenewTable";
-
+import { Renew } from "../../utils/RenewType";
 const apiUrl = `http://localhost:8082/api/renews`;
 const transactoinApiUrl = "http://localhost:8082/api/transactions";
 
@@ -22,75 +24,138 @@ async function fetchRenews(): Promise<Renew[]> {
   }
 }
 
+async function fetchTransactions(): Promise<Transaction[]> {
+  try {
+    const response = await fetch(transactoinApiUrl);
+    if (!response.ok) {
+      throw new Error("Failed to fetch transactions");
+    }
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
 export default function RenewPage() {
   const [renews, setRenews] = useState<Renew[]>([]);
+  const [transactions, setTranscations] = useState<Transaction[]>([]);
+
   const [loading, setLoading] = useState<boolean>(true);
-  const [editingRenew, setEditingRenew] = useState<Renew | null>(null);
-  const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [renewIdToDelete, setRenewIdToDelete] = useState<string | null>(null);
+  const { addAlert } = useGlobalContext();
 
   useEffect(() => {
-    fetchRenews().then((data) => {
-      setRenews(data);
+    const fetchData = async () => {
+      const fetchedRenews = await fetchRenews();
+      const fetchedTransactions = await fetchTransactions();
+      setRenews(fetchedRenews);
+      setTranscations(fetchedTransactions);
       setLoading(false);
-    });
+    };
+
+    fetchData();
   }, []);
 
-  const handleCreate = () => {
-    setEditingRenew(null);
-    setIsFormOpen(true);
+  const handleAddAlert = (
+    iconName: keyof typeof Icons,
+    title: string,
+    message: string,
+    type: tAlertType
+  ) => {
+    const newAlert: tAlert = {
+      title: title,
+      message: message,
+      buttonText: "X",
+      iconName: iconName,
+      type: type,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    addAlert(newAlert);
   };
 
-  const handleEdit = (renew: Renew) => {
-    setEditingRenew(renew);
-    setIsFormOpen(true);
-  };
-
-  const handleDelete = async (renewId: string) => {
-    if (confirm("Are you sure you want to delete this Renew?")) {
-      try {
-        const response = await fetch(`${apiUrl}/${renewId}`, {
-          method: "DELETE",
-        });
-        if (!response.ok) {
-          throw new Error("Failed to delete renew");
-        }
-        setRenews(renews.filter((renew) => renew.id !== renewId));
-      } catch (error) {
-        console.error("Failed to delete renew:", error);
-      }
-    }
-  };
-
-  const handleFormSubmit = async (data: Renew) => {
+  const handleUpdateStatus = async (renewId: string, status: string) => {
     try {
-      const isUpdate = !!data.id;
-      const method = isUpdate ? "PATCH" : "POST";
-      const url = isUpdate ? `${apiUrl}/${data.id}` : apiUrl;
-
-      const response = await fetch(url, {
-        method,
+      // Find the renew by its ID in the current state to get the transactionId
+      const renewToUpdate = renews.find((renew) => renew.id === renewId);
+      if (!renewToUpdate) {
+        throw new Error("Renew not found");
+      }
+  
+      const transactionId = renewToUpdate.transaction.id || renewToUpdate.transaction; // Ensure to get the transaction ID, not the whole object
+  
+      // Send both status and transactionId in the request body
+      const response = await fetch(`${apiUrl}/${renewId}`, {  // Ensure this is correct
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          status,
+          transaction: transactionId,  // Include only the transaction ID
+        }),
       });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (isUpdate) {
-          setRenews(
-            renews.map((r) => (r.id === result.data.id ? result.data : r))
-          );
-        } else {
-          setRenews([...renews, result.data]);
-        }
-        setIsFormOpen(false);
-      } else {
-        const errorText = await response.text();
-        console.error(`Failed to submit renew: ${errorText}`);
+  
+      if (!response.ok) {
+        throw new Error("Failed to update status");
       }
+  
+      const result = await response.json();
+  
+      // Update the renews state
+      setRenews(
+        renews.map((renew) =>
+          renew.id === renewId ? { ...renew, status: result.data.status } : renew
+        )
+      );
+  
+      // Add success alert
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        `Renew ${status} successfully`,
+        tAlertType.SUCCESS
+      );
     } catch (error) {
-      console.error("Failed to submit renew:", error);
+      console.error(error);
+      // Add error alert
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Error",
+        "Failed to update status",
+        tAlertType.ERROR
+      );
+    }
+  };
+  
+  
+  
+
+  const handleDelete = async () => {
+    if (!renewIdToDelete) return;
+
+    try {
+      const response = await fetch(`${apiUrl}/${renewIdToDelete}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete renew");
+      }
+
+      setRenews(renews.filter((renew) => renew.id !== renewIdToDelete));
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        "Renew deleted successfully",
+        tAlertType.SUCCESS
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsConfirmDialogOpen(false);
+      setRenewIdToDelete(null);
     }
   };
 
@@ -99,30 +164,21 @@ export default function RenewPage() {
   }
 
   return (
-    <div>
-      <button
-        onClick={handleCreate}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        Create New Request
-      </button>
-      <div className="flex flex-wrap justify-start">
-        {renews.map((renew) => (
+    <div className="min-h-screen p-6">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-4 px-4 border-b-2">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800">Renews</h1>
+        </div>
+
+        <div className="flex flex-wrap justify-start">
           <RenewTable
-            key={renew.id}
-            renew={renew}
-            onEdit={handleEdit}
+            renews={renews}
+            onUpdateStatus={handleUpdateStatus}
             onDelete={handleDelete}
           />
-        ))}
+        </div>
       </div>
-      {isFormOpen && (
-        <RenewForm
-          renew={editingRenew}
-          onSubmit={handleFormSubmit}
-          onClose={() => setIsFormOpen(false)}
-        />
-      )}
     </div>
   );
 }
+
