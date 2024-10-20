@@ -20,19 +20,17 @@ import { Renew } from "./schemas/renew.schema";
 const POPULATE_PIPE = [
   {
     path: "transaction",
-    select: ["book"],
-    populate: {
-      path: "book",
-      select: ["name.en", "name.th", "ISBN"],
-    },
-  },
-  {
-    path: "transaction",
-    select: ["user"],
-    populate: {
-      path: "user",
-      select: ["username"],
-    },
+    select: ["user", "book", "status", "dueDate", "borrowDate", "returnDate"],
+    populate: [
+      {
+        path: "user",
+        select: "username"
+      },
+      {
+        path: "book",
+        select: "ISBN",
+      },
+    ],
   },
 ];
 
