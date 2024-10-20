@@ -1,21 +1,11 @@
-import { SessionProvider } from '@/contexts/ctx';
-import tamaguiConfig from '@/tamagui.config';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Slot } from 'expo-router';
-import { useColorScheme } from 'react-native';
-import { TamaguiProvider } from 'tamagui';
+import { Stack } from "expo-router";
 
-
-export default function Root() {
-  const colorScheme = useColorScheme()
-  // Set up the auth context and render our layout inside of it.
+export default function RootLayout() {
   return (
-    <TamaguiProvider config={tamaguiConfig} defaultTheme={colorScheme!}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <SessionProvider>
-          <Slot />
-        </SessionProvider>
-      </ThemeProvider>
-    </TamaguiProvider>
+    <Stack>
+      <Stack.Screen name="index" options={{ title: 'MFU-Library-index' }} />
+      <Stack.Screen name="login" options={{ title: 'MFU-Library-login' }} />
+      <Stack.Screen name="main" options={{ title: 'MFU-Library' }} />
+    </Stack>
   );
 }

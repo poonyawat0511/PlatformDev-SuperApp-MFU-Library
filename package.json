@@ -26,6 +26,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-native": "^0.75.2",
+    "react-native-dotenv": "^3.4.11",
     "react-native-web": "^0.19.12",
     "react-transition-group": "^4.4.5",
     "superapp": "file:",

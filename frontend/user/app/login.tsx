@@ -1,73 +1,55 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, Alert } from 'react-native';
+import axios from 'axios';
+import { useRouter } from 'expo-router';
 
-import { router } from "expo-router";
-import { useSession } from "@/contexts/ctx";
-import { Button, Card, H3, Input, Sheet, Text, View, YStack } from "tamagui";
+export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const router = useRouter();
 
-export default function SignIn() {
-  const { logIn } = useSession();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [open, setOpen] = useState(true);
-  const [modal, setModal] = useState(true);
-
-
-  const handlelogIn = async () => {
+  const handleLogin = async () => {
     try {
-      await logIn(email, password);
-      router.replace("/");
+      const response = await axios.post('http://192.168.1.37:8082/api/auth/login', {
+        email,
+        password,
+      });
+  
+      if (response.data.message === 'Login successful') {
+        // Navigate to the profile screen if login is successful
+        router.push('./main');
+      }
     } catch (error) {
-      console.error("Sign-in error:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        // Error response from server
+        const errorMessage = error.response.data.message || 'Login failed';
+        Alert.alert('Login failed', errorMessage);
+      } else {
+        // Network or other errors
+        Alert.alert('Login failed', 'An unexpected error occurred.');
+      }
     }
   };
 
+
   return (
-    <YStack
-      style={{
-        flex: 1,
-        justifyContent: "flex-end",
-        alignItems: "center",
-        backgroundColor: "grey",
-      }}
-    >
-      <Sheet
-        modal={modal}
-        open={open}
-        snapPoints={undefined}
-        snapPointsMode={'fit'}
-      >
-        <Card padded borderRadius="$8">
-          <H3 paddingBottom="$2">Get Started</H3>
-          <YStack paddingBottom="$4">
-            <Text>Welcome to MFU Campus!</Text>
-            <Text>Your gateway to campus life and services.</Text>
-          </YStack>
-          <YStack gap="$2" paddingBottom="$4">
-            <Input
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              style={{ borderBottomWidth: 1 }}
-            />
-            <Input
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              style={{ borderBottomWidth: 1 }}
-            />
-          </YStack>
-          <Button
-            borderRadius="$6"
-            marginBottom="$2"
-            color="white"
-            onPress={handlelogIn}
-          >
-            Continue
-          </Button>
-          <Button borderRadius="$6">Continue With Google</Button>
-        </Card>
-      </Sheet>
-    </YStack>
+    <View style={{ flex: 1, justifyContent: 'center', padding: 20 }}>
+      <Text>Email:</Text>
+      <TextInput
+        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 20 }}
+        onChangeText={setEmail}
+        value={email}
+        keyboardType="email-address"
+        autoCapitalize="none"
+      />
+      <Text>Password:</Text>
+      <TextInput
+        style={{ height: 40, borderColor: 'gray', borderWidth: 1, marginBottom: 20 }}
+        onChangeText={setPassword}
+        value={password}
+        secureTextEntry
+      />
+      <Button title="Login" onPress={handleLogin} />
+    </View>
   );
 }
