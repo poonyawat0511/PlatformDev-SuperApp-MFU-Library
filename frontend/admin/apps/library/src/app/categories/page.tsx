@@ -1,13 +1,13 @@
 "use client";
+import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import * as Icons from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 
-import { Category } from "@/utils/CategoryTypes";
-import ConfirmDialog from "@/components/Categories/ConfirmDialog";
-import CategoryTable from "@/components/Categories/CategoryTable";
 import CategoryForm from "@/components/Categories/CategoryForm";
+import CategoryTable from "@/components/Categories/CategoryTable";
+import ConfirmDialog from "@/components/Categories/ConfirmDialog";
+import { Category } from "@/utils/CategoryTypes";
 
 const apiUrl = "http://localhost:8082/api/book-categories";
 
@@ -91,7 +91,7 @@ export default function CategoriesPage() {
         throw new Error("Failed to delete categories");
       }
       setCategories(categories.filter((t) => t.id !== catetegoryIdToDelete));
-      handleAddAlert("ExclamationCircleIcon", "Success", "Transaction deleted successfully", tAlertType.SUCCESS);
+      handleAddAlert("ExclamationCircleIcon", "Success", "Category deleted successfully", tAlertType.SUCCESS);
     } catch (error) {
       console.log(error);
     } finally {
@@ -182,7 +182,7 @@ export default function CategoriesPage() {
         isOpen={isConfirmDialogOpen}
         onConfirm={handleDelete}
         onClose={() => setIsConfirmDialogOpen(false)}
-        message="Are you sure you want to delete this transaction?"
+        message="Are you sure you want to delete this category?"
       />
     </div>
   );
