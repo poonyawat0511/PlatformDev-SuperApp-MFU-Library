@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, Image, ImageBackground, TouchableOpacity, Modal, Button, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import PagerView from 'react-native-pager-view';
+import { useFocusEffect } from '@react-navigation/native'; 
 
 interface Book {
   id: string;
@@ -20,24 +21,26 @@ export default function BookPage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   // Fetch books from the API
-  useEffect(() => {
-    const fetchBooks = async () => {
-      try {
-        const response = await axios.get('http://192.168.1.37:8082/api/books/');
-        const updatedBooks = response.data.data.map((book: Book) => ({
-          ...book,
-          bookImage: book.bookImage.replace('http://127.0.0.1', 'http://192.168.1.37'), // Replace 127.0.0.1 with your local IP
-        }));
-        setBooks(updatedBooks);
-      } catch (error) {
-        console.error('Error fetching books:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchBooks = async () => {
+    try {
+      const response = await axios.get('http://192.168.1.37:8082/api/books/');
+      const updatedBooks = response.data.data.map((book: Book) => ({
+        ...book,
+        bookImage: book.bookImage.replace('http://127.0.0.1', 'http://192.168.1.37'), // Replace 127.0.0.1 with your local IP
+      }));
+      setBooks(updatedBooks);
+    } catch (error) {
+      console.error('Error fetching books:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchBooks();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchBooks(); 
+    }, [])
+  );
 
   const openModal = (book: Book) => {
     setSelectedBook(book);
@@ -72,7 +75,7 @@ export default function BookPage() {
   const chunkedBooks = books.reduce((resultArray: Book[][], item, index) => { 
     const chunkIndex = Math.floor(index / 6);
     if (!resultArray[chunkIndex]) {
-      resultArray[chunkIndex] = []; // start a new chunk
+      resultArray[chunkIndex] = []; // Start a new chunk
     }
     resultArray[chunkIndex].push(item);
     return resultArray;
@@ -81,41 +84,40 @@ export default function BookPage() {
   return (
     <ImageBackground
       source={require('../assets/images/LibraryMFUBG.png')}
-      imageStyle={{opacity:0.5}}
+      imageStyle={{ opacity: 0.5 }}
       style={styles.background}
     >
+      <View style={styles.container}>
+        <PagerView style={styles.pager} initialPage={0}>
+          {chunkedBooks.map((page, index) => (
+            <View key={index} style={styles.page}>
+              {renderPage(page)}
+            </View>
+          ))}
+        </PagerView>
 
-    <View style={styles.container}>
-      <PagerView style={styles.pager} initialPage={0}>
-        {chunkedBooks.map((page, index) => (
-          <View key={index} style={styles.page}>
-            {renderPage(page)}
+        {/* Modal for book details */}
+        <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modal}>
+              <ScrollView contentContainerStyle={styles.modalContent}>
+                {selectedBook && (
+                  <>
+                    <Image source={{ uri: selectedBook.bookImage }} style={styles.modalImage} />
+                    <Text style={styles.modalTitle}>{selectedBook.name.en}</Text>
+                    <Text style={styles.modalDescription}>{selectedBook.description.en}</Text>
+                    <Text style={styles.modalDetails}>Status: {selectedBook.status}</Text>
+                    <Text style={styles.modalDetails}>Quantity: {selectedBook.quantity}</Text>
+                    <Text style={styles.modalDetails}>ISBN: {selectedBook.ISBN}</Text>
+                    <Button title="Reserve this book" onPress={() => { /* Placeholder */ }} />
+                    <Button title="Close" onPress={closeModal} />
+                  </>
+                )}
+              </ScrollView>
+            </View>
           </View>
-        ))}
-      </PagerView>
-
-      {/* Modal for book details */}
-      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
-      <View style={styles.modalContainer}>
-      <View style={styles.modal}>
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            {selectedBook && (
-              <>
-                <Image source={{ uri: selectedBook.bookImage }} style={styles.modalImage} />
-                <Text style={styles.modalTitle}>{selectedBook.name.en}</Text>
-                <Text style={styles.modalDescription}>{selectedBook.description.en}</Text>
-                <Text style={styles.modalDetails}>Status: {selectedBook.status}</Text>
-                <Text style={styles.modalDetails}>Quantity: {selectedBook.quantity}</Text>
-                <Text style={styles.modalDetails}>ISBN: {selectedBook.ISBN}</Text>
-                <Button title="Reserve this book" onPress={() => { /* Placeholder */ }} />
-                <Button title="Close" onPress={closeModal} />
-              </>
-            )}
-          </ScrollView>
-        </View>
-        </View>
-      </Modal>
-    </View>
+        </Modal>
+      </View>
     </ImageBackground>
   );
 }
@@ -154,5 +156,4 @@ const styles = StyleSheet.create({
     flex: 1,
     resizeMode: 'cover', 
   },
-
 });

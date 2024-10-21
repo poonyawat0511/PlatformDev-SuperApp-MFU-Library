@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, ImageBackground, ScrollView, StyleSheet, TouchableOpacity, Modal, Button, Alert } from 'react-native';
 import axios from 'axios';
+import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+
 
 interface TimeSlot {
   id: string;
@@ -34,33 +36,41 @@ export default function RoomReservation() {
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [refresh, setRefresh] = useState(false); // State to trigger data refresh
 
-  // Fetch data on mount and when refresh changes
+  const fetchTimeSlots = async () => {
+    const response = await axios.get('http://192.168.1.37:8082/api/timeslots/');
+    setTimeSlots(response.data.data);
+  };
+
+  const fetchRooms = async () => {
+    const response = await axios.get('http://192.168.1.37:8082/api/rooms/');
+    setRooms(response.data.data);
+  };
+
+  const fetchRoomTimeSlots = async () => {
+    const response = await axios.get('http://192.168.1.37:8082/api/room-timeslots/');
+    setRoomTimeSlots(response.data.data);
+  };
+
+  const fetchUser = async () => {
+    const response = await axios.get('http://192.168.1.37:8082/api/users/profile');
+    setUser(response.data);
+  };
+
   useEffect(() => {
-    const fetchTimeSlots = async () => {
-      const response = await axios.get('http://192.168.1.37:8082/api/timeslots/');
-      setTimeSlots(response.data.data);
-    };
-
-    const fetchRooms = async () => {
-      const response = await axios.get('http://192.168.1.37:8082/api/rooms/');
-      setRooms(response.data.data);
-    };
-
-    const fetchRoomTimeSlots = async () => {
-      const response = await axios.get('http://192.168.1.37:8082/api/room-timeslots/');
-      setRoomTimeSlots(response.data.data);
-    };
-
-    const fetchUser = async () => {
-      const response = await axios.get('http://192.168.1.37:8082/api/users/profile');
-      setUser(response.data);
-    };
-
     fetchTimeSlots();
     fetchRooms();
     fetchRoomTimeSlots();
     fetchUser();
-  }, [refresh]); // Trigger re-fetch when refresh state changes
+  }, [refresh]); 
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchTimeSlots();
+      fetchRooms();
+      fetchRoomTimeSlots();
+      fetchUser();
+    }, [])
+  );
 
   const handleCellClick = (room: Room, timeSlot: TimeSlot) => {
     const slot = roomTimeSlots.find(

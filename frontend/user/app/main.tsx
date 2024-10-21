@@ -4,7 +4,6 @@ import BookPage from './Book';
 import RoomReservation from './RoomReservation';
 import Profile from './profile';
 
-// Create the Top Tab Navigator
 const Tab = createMaterialTopTabNavigator();
 
 export default function Main() {
