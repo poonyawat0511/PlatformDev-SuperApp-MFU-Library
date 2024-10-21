@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator, ImageBackground, StyleSheet } from 'react-native';
 import axios from 'axios';
 
 export default function Profile() {
@@ -26,8 +26,21 @@ export default function Profile() {
   }
 
   return (
+    <ImageBackground
+      source={require('../assets/images/LibraryMFUBG.png')}
+      imageStyle={{opacity:0.5}}
+      style={styles.background}
+    >
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>profile page, Welcome, {profile?.username}!</Text>
     </View>
+    </ImageBackground>
   );
 }
+
+const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover', 
+  },
+});

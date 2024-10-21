@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, Modal, Button, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, Image, ImageBackground, TouchableOpacity, Modal, Button, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import PagerView from 'react-native-pager-view';
 
@@ -79,6 +79,12 @@ export default function BookPage() {
   }, []);
 
   return (
+    <ImageBackground
+      source={require('../assets/images/LibraryMFUBG.png')}
+      imageStyle={{opacity:0.5}}
+      style={styles.background}
+    >
+
     <View style={styles.container}>
       <PagerView style={styles.pager} initialPage={0}>
         {chunkedBooks.map((page, index) => (
@@ -90,7 +96,8 @@ export default function BookPage() {
 
       {/* Modal for book details */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
-        <View style={styles.modalView}>
+      <View style={styles.modalContainer}>
+      <View style={styles.modal}>
           <ScrollView contentContainerStyle={styles.modalContent}>
             {selectedBook && (
               <>
@@ -106,8 +113,10 @@ export default function BookPage() {
             )}
           </ScrollView>
         </View>
+        </View>
       </Modal>
     </View>
+    </ImageBackground>
   );
 }
 
@@ -124,4 +133,26 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
   modalDescription: { fontSize: 16, marginBottom: 10 },
   modalDetails: { fontSize: 14, marginBottom: 5 },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center', // Center vertically
+    alignItems: 'center', // Center horizontally
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Optional: dim background
+  },
+  modal: {
+    width: 300, // Set a fixed width
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  background: {
+    flex: 1,
+    resizeMode: 'cover', 
+  },
+
 });

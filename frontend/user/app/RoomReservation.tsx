@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, TouchableOpacity, Modal, Button, Alert } from 'react-native';
+import { View, Text, Image, ImageBackground, ScrollView, StyleSheet, TouchableOpacity, Modal, Button, Alert } from 'react-native';
 import axios from 'axios';
 
 interface TimeSlot {
@@ -98,66 +98,97 @@ export default function RoomReservation() {
   };
 
   return (
-    <View>
-      {/* Text and Image Above Table */}
-      <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
-        <Image source={require('../assets/images/RoomRuleBanner.png')} style={{ width: 350, height: 100 }} />
-      </View>
-      <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
-        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Room Reservation</Text>
-      </View>
-      <ScrollView horizontal>
+    <ImageBackground
+      source={require('../assets/images/LibraryMFUBG.png')}
+      imageStyle={{ opacity: 0.5 }}
+      style={styles.background}
+    >
+      <View>
+        {/* Text and Image Above Table */}
         <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
-          {/* Table Headers */}
-          <View style={styles.tableRow}>
-            <Text style={styles.headerCell}>Room/Time</Text>
-            {timeSlots.map((slot) => (
-              <Text key={slot.id} style={styles.headerCell}>
-                {slot.start} - {slot.end}
-              </Text>
-            ))}
-          </View>
-
-          {/* Table Content */}
-          {rooms.map((room) => (
-            <View key={room.id} style={styles.tableRow}>
-              <Text style={styles.headerCell}>{room.type.name.en} {room.room}</Text>
-              {timeSlots.map((timeSlot) => {
-                const slot = roomTimeSlots.find(
-                  (rts) => rts.room.id === room.id && rts.timeSlot.id === timeSlot.id
-                );
-
-                return (
-                  <TouchableOpacity
-                    key={timeSlot.id}
-                    style={[
-                      styles.cell,
-                      slot?.status === 'free' ? styles.freeCell : styles.occupiedCell,
-                    ]}
-                    onPress={() => handleCellClick(room, timeSlot)}
-                  >
-                    <Text style={styles.cellText}>{slot?.status}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          ))}
-
-          {/* Confirmation Modal */}
-          <Modal visible={modalVisible} transparent={true} animationType="slide">
-            <View style={styles.modal}>
-              <Text>Confirm Reservation for </Text>
-              <Text>Room {selectedSlot?.roomId}</Text>
-              <Text>Time Slot {selectedSlot?.timeSlotId}</Text>
-              <Text></Text>
-              <Button title="Confirm" onPress={handleReservation} />
-              <Text></Text>
-              <Button title="Cancel" onPress={handleCancel} />
-            </View>
-          </Modal>
+          <Image source={require('../assets/images/LibraryMFURoomRuleBanner.png')} style={{ width: 350, height: 100 }} />
         </View>
-      </ScrollView>
-    </View>
+        <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Room Reservation</Text>
+        </View>
+
+
+        <ScrollView horizontal>
+          <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
+            {/* Table Headers */}
+            <View style={styles.tableRow}>
+              <Text style={styles.headerCell}>Room/Time</Text>
+              {timeSlots.map((slot) => (
+                <Text key={slot.id} style={styles.headerCell}>
+                  {slot.start} - {slot.end}
+                </Text>
+              ))}
+            </View>
+
+            {/* Table Content */}
+            {rooms
+              .sort((a, b) => a.type.name.en.localeCompare(b.type.name.en)) // Sort rooms by name
+              .map((room) => (
+                <View key={room.id} style={styles.tableRow}>
+                  <Text style={styles.headerCell}>
+                    {room.type.name.en} {room.room}
+                  </Text>
+                  {timeSlots.map((timeSlot) => {
+                    const slot = roomTimeSlots.find(
+                      (rts) => rts.room.id === room.id && rts.timeSlot.id === timeSlot.id
+                    );
+
+                    return (
+                      <TouchableOpacity
+                        key={timeSlot.id}
+                        style={[
+                          styles.cell,
+                          slot
+                            ? slot.status === 'free'
+                              ? styles.freeCell
+                              : slot.status === 'reserved'
+                                ? styles.reservedCell
+                                : styles.inUseCell
+                            : styles.emptyCell
+                        ]}
+                        onPress={() => handleCellClick(room, timeSlot)}
+                      >
+                        <Text style={styles.cellText}>{slot?.status}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ))}
+
+            {/* Confirmation Modal */}
+            <Modal visible={modalVisible} transparent={true} animationType="slide">
+              <View style={styles.modalContainer}>
+                <View style={styles.modal}>
+                  {selectedSlot && (
+                    <>
+                      <Text>Confirm Reservation for</Text>
+                      {/* Find the selected room and time slot details */}
+                      <Text>
+                        Room: {rooms.find(room => room.id === selectedSlot.roomId)?.type.name.en}{' '}
+                        {rooms.find(room => room.id === selectedSlot.roomId)?.room}
+                      </Text>
+                      <Text>
+                        Time Slot: {timeSlots.find(slot => slot.id === selectedSlot.timeSlotId)?.start} -{' '}
+                        {timeSlots.find(slot => slot.id === selectedSlot.timeSlotId)?.end}
+                      </Text>
+                      <Text></Text>
+                      <Button title="Confirm" onPress={handleReservation} />
+                      <Text></Text>
+                      <Button title="Cancel" onPress={handleCancel} />
+                    </>
+                  )}
+                </View>
+              </View>
+            </Modal>
+          </View>
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 }
 
@@ -168,7 +199,7 @@ const styles = StyleSheet.create({
   },
   headerCell: {
     padding: 10,
-    backgroundColor: 'gray',
+    backgroundColor: '#E3E1E1',
     width: 120,  // Fixed width to match the content cells
     textAlign: 'center',
     fontWeight: 'bold',
@@ -180,18 +211,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cellText: {
-    color: 'white',
+    color: 'dark',
   },
   freeCell: {
     backgroundColor: 'green',
   },
-  occupiedCell: {
+  reservedCell: {
+    backgroundColor: 'yellow',
+  },
+  inUseCell: {
     backgroundColor: 'red',
   },
-  modal: {
+  emptyCell: {
+    backgroundColor: 'red',
+    opacity: 0
+  },
+  modalContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(219, 174, 20, 1)',
+    justifyContent: 'center', // Center vertically
+    alignItems: 'center', // Center horizontally
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Optional: dim background
+  },
+  modal: {
+    width: 300, // Set a fixed width
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
   },
 });

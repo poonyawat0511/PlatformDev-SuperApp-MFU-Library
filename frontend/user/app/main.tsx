@@ -1,7 +1,5 @@
 import React from 'react';
 import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
-import { NavigationContainer } from '@react-navigation/native';
-
 import BookPage from './Book';
 import RoomReservation from './RoomReservation';
 import Profile from './profile';
