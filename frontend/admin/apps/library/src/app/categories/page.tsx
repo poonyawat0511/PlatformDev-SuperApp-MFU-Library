@@ -1,127 +1,189 @@
 "use client";
-
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
+import * as Icons from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import { Category } from "../../utils/CategoryTypes";
-import CategoryForm from "../../components/Categories/CategoryForm";
-import Table from "@shared/components/Table";
-import { createAPI } from "@shared/utils/common/api"; // Ensure this import is correct
-import Loading from "@shared/components/Loading";
 
-const $API_library = createAPI("http://localhost:8082/api");
+import { Category } from "@/utils/CategoryTypes";
+import ConfirmDialog from "@/components/Categories/ConfirmDialog";
+import CategoryTable from "@/components/Categories/CategoryTable";
+import CategoryForm from "@/components/Categories/CategoryForm";
+
+const apiUrl = "http://localhost:8082/api/book-categories";
 
 async function fetchCategories(): Promise<Category[]> {
   try {
-    const response = await $API_library.GET<Category[]>('book-categories');
-    return response.data; // Directly return the data from the response
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error("Failed to fetch categories");
+    }
+    const result = await response.json();
+    return result.data;
   } catch (error) {
     console.error(error);
-    return []; // Return an empty array on error
+    return [];
   }
 }
 
 export default function CategoriesPage() {
+  const { addAlert } = useGlobalContext();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<Category | null>(
+    null
+  );
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-
-  const [columns, setColumns] = useState([
-    { label: "ID", field: "id" },
-    { label: "Name (TH)", field: "nameTh" },
-    { label: "Name (EN)", field: "nameEn" },
-  ]);
-
-  // Define a type for your row structure
-  interface CategoryRow {
-    id: string; // or number depending on your ID type
-    nameTh: string;
-    nameEn: string;
-  }
-
-  const [rows, setRows] = useState<CategoryRow[]>([]);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+  const [catetegoryIdToDelete, setCategoryIdToDelete] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
-    fetchCategories().then((data) => {
-      setCategories(data);
-      // Map categories to rows for the table
-      const newRows = data.map((category) => ({
-        id: category.id,
-        nameTh: category.name.th,
-        nameEn: category.name.en,
-      }));
-      setRows(newRows);
+    const fetchData = async () => {
+      const fetchedCategories = await fetchCategories();
+      setCategories(fetchedCategories);
       setLoading(false);
-    });
+    };
+
+    fetchData();
   }, []);
 
+  const handleAddAlert = (
+    iconName: keyof typeof Icons,
+    title: string,
+    message: string,
+    type: tAlertType
+  ) => {
+    const newAlert: tAlert = {
+      title: title,
+      message: message,
+      buttonText: "X",
+      iconName: iconName,
+      type: type,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    addAlert(newAlert);
+  };
+
   const handleCreate = () => {
-    setEditingCategory(null);
+    setSelectedCategories(null);
     setIsFormOpen(true);
   };
 
   const handleEdit = (category: Category) => {
-    setEditingCategory(category);
+    setSelectedCategories(category);
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (categoryId: string) => {
-    if (confirm("Are you sure you want to delete this Category?")) {
-      try {
-        await $API_library.DELETE(`book-categories/${categoryId}`); // Use the API utility
-        setCategories(categories.filter((category) => category.id !== categoryId));
-      } catch (error) {
-        console.error("Failed to delete category:", error);
-      }
-    }
+  const confirmDelete = (categoryId: string) => {
+    setCategoryIdToDelete(categoryId);
+    setIsConfirmDialogOpen(true);
   };
 
-  const handleFormSubmit = async (data: Category) => {
+  const handleDelete = async () => {
+    if (!catetegoryIdToDelete) return;
+  
     try {
-      const isUpdate = !!data.id;
-      const method = isUpdate ? "PATCH" : "POST";
-      const response = isUpdate
-        ? await $API_library.PATCH<Category>(`book-categories/${data.id}`, data) // Use the API utility
-        : await $API_library.POST<Category>('book-categories', data); // Use the API utility
-
-      if (response) {
-        const result = response.data; // Access the data field
-        if (isUpdate) {
-          setCategories(categories.map((c) => (c.id === result.id ? result : c)));
-        } else {
-          setCategories([...categories, result]);
-        }
-        setIsFormOpen(false);
+      const response = await fetch(`${apiUrl}/${catetegoryIdToDelete}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        throw new Error("Failed to delete timeslot");
       }
+      setCategories(categories.filter((t) => t.id !== catetegoryIdToDelete));
+      handleAddAlert("ExclamationCircleIcon", "Success", "Transaction deleted successfully", tAlertType.SUCCESS);
     } catch (error) {
-      console.error("Failed to submit category:", error);
+      console.log(error);
+    } finally {
+      setIsConfirmDialogOpen(false);
+      setCategoryIdToDelete(null);
     }
   };
 
+  const handleFormSubmit = async (formData: Category) => {
+    try {
+      const method = formData.id ? "PATCH" : "POST";
+      const url = apiUrl + (formData.id ? `/${formData.id}` : "");
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to ${method === "POST" ? "create" : "update"} timeslot`
+        );
+      }
+
+      const result = await response.json();
+      if (method === "POST") {
+        setCategories([...categories, result.data]);
+      } else {
+        setCategories(
+          categories.map((t) => (t.id === result.data.id ? result.data : t))
+        );
+      }
+      setIsFormOpen(false);
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        "Category updated successfully",
+        tAlertType.SUCCESS
+      );
+      setSelectedCategories(null);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
   if (loading) {
-    return <Loading/>;
+    return <div>Loading...</div>;
   }
 
   return (
-    <>
-      <div>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-        >
-          Create New Book
-        </button>
-        {isFormOpen && (
-          <CategoryForm
-            category={editingCategory}
-            onSubmit={handleFormSubmit}
-            onClose={() => setIsFormOpen(false)}
+    <div className="min-h-screen p-6">
+      <div className="container mx-auto">
+        <div className="flex justify-between items-center mb-4 px-4 border-b-2">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800">
+            Timeslot
+          </h1>
+          <button
+            onClick={handleCreate}
+            className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
+          >
+            New Timeslot
+          </button>
+        </div>
+        <div className="flex flex-wrap justify-start">
+          <CategoryTable
+            categories={categories}
+            onEdit={handleEdit}
+            onDelete={confirmDelete}
           />
+        </div>
+
+        {isFormOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <CategoryForm
+                category={selectedCategories}
+                onSubmit={handleFormSubmit}
+                onClose={() => setIsFormOpen(false)}
+              />
+            </div>
+          </div>
         )}
       </div>
-
-      <div>
-        <Table columns={columns} rows={rows} />
-      </div>
-    </>
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        onConfirm={handleDelete}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        message="Are you sure you want to delete this transaction?"
+      />
+    </div>
   );
 }
