@@ -1,56 +1,72 @@
 "use client";
-import { useEffect, useState } from "react";
-import RoomForm from "../../components/Rooms/RoomForm";
-import { Room } from "../components/Types/RoomTypes";
 
-export default function RoomPage() {
+import { useEffect, useState } from "react";
+import { Room } from "@/utils/RoomTypes";
+import RoomTable from "@/components/Rooms/RoomTable";
+import RoomForm from "@/components/Rooms/RoomCard";
+import ConfirmDialog from "@/components/Rooms/ConfirmDialog";
+
+const apiUrl = `http://localhost:8082/api/rooms`;
+
+async function fetchRooms(): Promise<Room[]> {
+  try {
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error("Failed to fetch rooms");
+    }
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export default function RoomsPage() {
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null); // for handling confirmation modal
 
   useEffect(() => {
-    fetchRooms();
+    fetchRooms().then((data) => {
+      setRooms(data);
+      setLoading(false);
+    });
   }, []);
 
-  const fetchRooms = async () => {
-    try {
-      const response = await fetch("http://localhost:8082/api/rooms");
-      const data = await response.json();
-      setRooms(data.data);
-    } catch (error) {
-      console.error("Error fetching rooms:", error);
-    }
-  };
-
   const handleCreate = () => {
-    setSelectedRoom(null);
+    setEditingRoom(null);
     setIsFormOpen(true);
   };
 
   const handleEdit = (room: Room) => {
-    setSelectedRoom(room);
+    setEditingRoom(room);
     setIsFormOpen(true);
   };
 
   const handleDelete = async (roomId: string) => {
     try {
-      await fetch(`http://localhost:8082/api/rooms/${roomId}`, {
+      const response = await fetch(`${apiUrl}/${roomId}`, {
         method: "DELETE",
       });
-      fetchRooms();
+      if (!response.ok) {
+        throw new Error("Failed to delete room");
+      }
+      setRooms(rooms.filter((room) => room.id !== roomId));
     } catch (error) {
-      console.error("Error deleting room:", error);
+      console.error("Failed to delete room:", error);
     }
   };
 
-  const handleSubmit = async (data: Room) => {
+  const handleFormSubmit = async (data: Room) => {
     try {
-      const method = data.id ? "PATCH" : "POST";
-      const endpoint = data.id
-        ? `http://localhost:8082/api/rooms/${data.id}`
-        : "http://localhost:8082/api/rooms";
+      const isUpdate = !!data.id;
+      const method = isUpdate ? "PATCH" : "POST";
+      const url = isUpdate ? `${apiUrl}/${data.id}` : apiUrl;
 
-      await fetch(endpoint, {
+      const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -58,51 +74,58 @@ export default function RoomPage() {
         body: JSON.stringify(data),
       });
 
-      fetchRooms(); // Refresh the room list after submission
-      setIsFormOpen(false);
+      if (response.ok) {
+        const result = await response.json();
+        if (isUpdate) {
+          setRooms(rooms.map((r) => (r.id === result.data.id ? result.data : r)));
+        } else {
+          setRooms([...rooms, result.data]);
+        }
+        setIsFormOpen(false);
+      } else {
+        const errorText = await response.text();
+        console.error(`Failed to submit room: ${errorText}`);
+      }
     } catch (error) {
-      console.error("Error submitting room data:", error);
+      console.error("Failed to submit room:", error);
     }
   };
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Room Management</h1>
-      <button
-        onClick={handleCreate}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        Create New Room
-      </button>
-      <ul>
-        {rooms.map((room) => (
-          <li key={room.id} className="mb-2 flex justify-between items-center">
-            <div>
-              Room {room.room}, Floor {room.floor} - {room.status} (
-              {room.type.name.en})
-            </div>
-            <div>
-              <button
-                onClick={() => handleEdit(room)}
-                className="bg-yellow-500 text-white px-4 py-2 rounded mr-2"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(room.id)}
-                className="bg-red-500 text-white px-4 py-2 rounded"
-              >
-                Delete
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="flex justify-between items-center mb-4 px-4 border-b-2">
+        <h1 className="text-3xl font-bold mb-6 text-gray-800">Rooms</h1>
+        <button
+          onClick={handleCreate}
+          className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
+        >
+          New Room Type
+        </button>
+      </div>
+
+      <RoomTable rooms={rooms} onEdit={handleEdit} onDelete={(roomId) => setConfirmDelete(roomId)} />
+
       {isFormOpen && (
         <RoomForm
-          room={selectedRoom}
-          onSubmit={handleSubmit}
+          room={editingRoom}
+          onSubmit={handleFormSubmit}
           onClose={() => setIsFormOpen(false)}
+        />
+      )}
+
+      {confirmDelete && (
+        <ConfirmDialog
+          isOpen={!!confirmDelete}
+          message="Are you sure you want to delete this room?"
+          onConfirm={() => {
+            handleDelete(confirmDelete!);
+            setConfirmDelete(null); // Close the dialog after confirmation
+          }}
+          onClose={() => setConfirmDelete(null)}
         />
       )}
     </div>
