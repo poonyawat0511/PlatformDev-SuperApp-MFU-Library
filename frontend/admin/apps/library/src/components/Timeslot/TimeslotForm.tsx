@@ -1,12 +1,12 @@
 "server client";
+import { Timeslot } from "@/utils/TimeslotType";
+import * as Icons from "@heroicons/react/24/outline";
 import Modal from "@shared/components/Modal";
 import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import React, { useEffect, useState } from "react";
 import { GrFormClose } from "react-icons/gr";
 import { LiaCheckCircle } from "react-icons/lia";
-import * as Icons from "@heroicons/react/24/outline";
-import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import { Timeslot } from "@/utils/TimeslotType";
 
 interface TimeslotFormProps {
   timeslot: Timeslot | null;
@@ -14,7 +14,7 @@ interface TimeslotFormProps {
   onClose: () => void;
 }
 
-const TransactionForm: React.FC<TimeslotFormProps> = ({
+const TimeSlotForm: React.FC<TimeslotFormProps> = ({
   timeslot,
   onSubmit,
   onClose,
@@ -160,4 +160,4 @@ const TransactionForm: React.FC<TimeslotFormProps> = ({
   );
 };
 
-export default TransactionForm;
+export default TimeSlotForm;
