@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, Image, ActivityIndicator, ImageBackground, StyleSheet, Button, FlatList, Alert } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 
 interface Reservation {
@@ -19,6 +19,7 @@ export default function Profile() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
+  const router = useRouter();
 
   const fetchProfileAndReservations = async () => {
     try {
@@ -50,7 +51,7 @@ export default function Profile() {
       const response = await axios.post('http://192.168.1.37:8082/api/auth/logout');
       if (response.data.message === 'Logout successful') {
         Alert.alert('Success', 'You have logged out successfully.', [
-          { text: 'OK', onPress: () => router.push('./index') },
+          { text: 'OK', onPress: () => router.push('./login') },
         ]);
       }
     } catch (error) {
@@ -77,6 +78,8 @@ export default function Profile() {
         <View style={{ justifyContent: 'center', alignItems: 'center' }}>
           <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.username}</Text>
           <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.email}</Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}> </Text>
+          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Your Room Reservation</Text>
         </View>
 
         <FlatList
@@ -118,6 +121,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     width: 300,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   logoutButton: {
     marginTop: 20,

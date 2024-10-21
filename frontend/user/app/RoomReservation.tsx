@@ -176,13 +176,13 @@ export default function RoomReservation() {
                 <View style={styles.modal}>
                   {selectedSlot && (
                     <>
-                      <Text>Confirm Reservation for</Text>
+                      <Text style={{ fontSize: 22, fontWeight: 'bold' }}>Confirm Reservation</Text>
                       {/* Find the selected room and time slot details */}
-                      <Text>
+                      <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
                         Room: {rooms.find(room => room.id === selectedSlot.roomId)?.type.name.en}{' '}
                         {rooms.find(room => room.id === selectedSlot.roomId)?.room}
                       </Text>
-                      <Text>
+                      <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
                         Time Slot: {timeSlots.find(slot => slot.id === selectedSlot.timeSlotId)?.start} -{' '}
                         {timeSlots.find(slot => slot.id === selectedSlot.timeSlotId)?.end}
                       </Text>

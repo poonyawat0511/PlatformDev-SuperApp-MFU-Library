@@ -109,8 +109,11 @@ export default function BookPage() {
                     <Text style={styles.modalDetails}>Status: {selectedBook.status}</Text>
                     <Text style={styles.modalDetails}>Quantity: {selectedBook.quantity}</Text>
                     <Text style={styles.modalDetails}>ISBN: {selectedBook.ISBN}</Text>
+                    <Text style={styles.modalDetails}> </Text>
                     <Button title="Reserve this book" onPress={() => { /* Placeholder */ }} />
+                    <Text style={styles.modalDetails}> </Text>
                     <Button title="Close" onPress={closeModal} />
+                    <Text style={styles.modalDetails}> </Text>
                   </>
                 )}
               </ScrollView>
