@@ -1,15 +1,15 @@
 "use client";
 
+import ConfirmDialog from "@/components/Books/ConfirmDialog";
+import * as Icons from "@heroicons/react/24/outline";
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { useEffect, useState } from "react";
+import TransactionForm from "../../components/Transactions/TransactionForm";
+import TransactionTable from "../../components/Transactions/TransactionTable";
 import { Book } from "../../utils/BookTypes";
 import { Transaction } from "../../utils/TransactionTypes";
 import { User } from "../../utils/UserTypes";
-import TransactionForm from "../../components/Transactions/TransactionForm";
-import TransactionTable from "../../components/Transactions/TransactionTable";
-import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import * as Icons from "@heroicons/react/24/outline";
-import { useGlobalContext } from "@shared/context/GlobalContext";
-import ConfirmDialog from "@/components/Books/ConfirmDialog";
 
 const apiUrl = `http://localhost:8082/api/transactions`;
 const apiBookUrl = `http://localhost:8082/api/books`;
@@ -128,6 +128,49 @@ export default function TransactionsPage() {
     setSelectedTransaction(null);
     setIsFormOpen(true);
   };
+
+  const handleRenew = async (transactionId: string) => {
+    try {
+      // Sending the POST request to the renew API with the transaction ID
+      const response = await fetch(`http://localhost:8082/api/renews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ transaction: transactionId }), // Send only the transaction ID as per API spec
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to renew transaction");
+      }
+  
+      const result = await response.json();
+  
+      // Assuming you want to update the specific transaction in the transactions list
+      setTransactions(transactions.map((t) => 
+        t.id === transactionId ? result.data.transaction : t
+      ));
+  
+      // Show a success message
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        "Transaction renewed successfully",
+        tAlertType.SUCCESS
+      );
+      await fetchTransaction(); // Refresh transactions
+    } catch (error) {
+      console.log(error);
+      // Show an error message
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Error",
+        "Failed to renew transaction",
+        tAlertType.ERROR
+      );
+    }
+  };
+  
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -272,6 +315,7 @@ export default function TransactionsPage() {
             transactions={filteredTransactions}
             onEdit={handleEdit}
             onDelete={confirmDelete}
+            onRenew={handleRenew}
           />
         ) : (
           <div className="text-center text-gray-500">

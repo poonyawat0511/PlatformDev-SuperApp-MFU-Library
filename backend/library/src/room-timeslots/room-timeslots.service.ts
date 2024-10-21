@@ -44,7 +44,8 @@ export class RoomTimeslotsService {
     try {
       const roomTimeSlotDoc = new this.roomTimeSlotModel(createRoomTimeslotDto);
       const roomTimeSlot = await roomTimeSlotDoc.save();
-      return roomTimeSlot.toObject();
+      const populateRoomTimeSlot = await roomTimeSlot.populate(POPULATE_PIPE)
+      return populateRoomTimeSlot.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -88,7 +89,7 @@ export class RoomTimeslotsService {
       }
       const options = { new: true };
       const roomTimeSlot = await this.roomTimeSlotModel
-        .findByIdAndUpdate(id, updateRoomTimeslotDto, options)
+        .findByIdAndUpdate(id, updateRoomTimeslotDto, options).populate(POPULATE_PIPE)
         .lean();
       return roomTimeSlot;
     } catch (error) {

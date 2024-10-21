@@ -1,12 +1,12 @@
 "use client";
+import ConfirmDialog from "@/components/Timeslot/ConfirmDialog";
+import TimeslotForm from "@/components/Timeslot/TimeslotForm";
+import TimeslotTable from "@/components/Timeslot/TimeslotTable";
 import { Timeslot } from "@/utils/TimeslotType";
+import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import * as Icons from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
-import TimeslotTable from "@/components/Timeslot/TimeslotTable";
-import TimeslotForm from "@/components/Timeslot/TimeslotForm";
-import ConfirmDialog from "@/components/Timeslot/ConfirmDialog";
 
 const apiUrl = "http://localhost:8082/api/timeslots";
 
@@ -181,7 +181,7 @@ export default function TimeSlotPage() {
         isOpen={isConfirmDialogOpen}
         onConfirm={handleDelete}
         onClose={() => setIsConfirmDialogOpen(false)}
-        message="Are you sure you want to delete this transaction?"
+        message="Are you sure you want to delete this time slot?"
       />
     </div>
   );
