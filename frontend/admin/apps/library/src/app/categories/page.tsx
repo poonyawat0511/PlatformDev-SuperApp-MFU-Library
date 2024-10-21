@@ -88,7 +88,7 @@ export default function CategoriesPage() {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error("Failed to delete timeslot");
+        throw new Error("Failed to delete categories");
       }
       setCategories(categories.filter((t) => t.id !== catetegoryIdToDelete));
       handleAddAlert("ExclamationCircleIcon", "Success", "Transaction deleted successfully", tAlertType.SUCCESS);
@@ -115,7 +115,7 @@ export default function CategoriesPage() {
 
       if (!response.ok) {
         throw new Error(
-          `Failed to ${method === "POST" ? "create" : "update"} timeslot`
+          `Failed to ${method === "POST" ? "create" : "update"} categories`
         );
       }
 
@@ -149,13 +149,13 @@ export default function CategoriesPage() {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4 px-4 border-b-2">
           <h1 className="text-3xl font-bold mb-6 text-gray-800">
-            Timeslot
+            Categories
           </h1>
           <button
             onClick={handleCreate}
             className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
           >
-            New Timeslot
+            New Categories
           </button>
         </div>
         <div className="flex flex-wrap justify-start">

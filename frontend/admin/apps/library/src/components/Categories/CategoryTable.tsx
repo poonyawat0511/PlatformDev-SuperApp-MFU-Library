@@ -8,7 +8,7 @@ interface CategoryTableProps {
   onDelete: (categoriesId: string) => void;
 }
 
-export default function TimeslotTable({
+export default function CategoryTable({
   categories,
   onEdit,
   onDelete,
@@ -18,8 +18,8 @@ export default function TimeslotTable({
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
           <tr>
-            <th className="px-6 py-3 text-center">Start</th>
-            <th className="px-6 py-3 text-center">End</th>
+            <th className="px-6 py-3 text-center">EN</th>
+            <th className="px-6 py-3 text-center">TH</th>
             <th className="px-6 py-3 text-center">Actions</th>
           </tr>
         </thead>
