@@ -1,27 +1,24 @@
 "use client";
-
-import ConfirmDialog from "@/components/Reservations/ConfirmDialog";
-import ReservationForm from "@/components/Reservations/ReservationForm";
-import ReservationTable from "@/components/Reservations/ReservationTable";
-import { Reservation } from "@/utils/ReservationType";
+import ConfirmDialog from "@/components/RoomTimeSlot/ConfirmDialog";
+import RoomTimeSlotForm from "@/components/RoomTimeSlot/RoomTimeSlotForm";
+import RoomTimeSlotTable from "@/components/RoomTimeSlot/RoomTimeSlotTable";
+import { RoomTimeSlot } from "@/utils/RoomTimeSlot";
 import { Room } from "@/utils/RoomTypes";
 import { Timeslot } from "@/utils/TimeslotType";
-import { User } from "@/utils/UserTypes";
 import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { useEffect, useState } from "react";
 
-const apiUrl = `http://localhost:8082/api/reservations`;
+const apiUrl = `http://localhost:8082/api/room-timeslots`;
+const timeSlotapiUrl = `http://localhost:8082/api/timeslots`;
 const apiRoomUrl = `http://localhost:8082/api/rooms`;
-const apiUserUrl = `http://localhost:8082/api/users`;
-const apiTimeSlotUrl = `http://localhost:8082/api/timeslots`
 
-async function fetchReservation(): Promise<Reservation[]> {
+async function fetchRoomTimeSlots(): Promise<RoomTimeSlot[]> {
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
-      throw new Error("Failed to fetch reservations");
+      throw new Error("Failed to fetch Room-Time-Slot");
     }
     const result = await response.json();
     return result.data;
@@ -45,11 +42,11 @@ async function fetchRooms(): Promise<Room[]> {
   }
 }
 
-async function fetchUsers(): Promise<User[]> {
+async function fetchTimeSlots(): Promise<Timeslot[]> {
   try {
-    const response = await fetch(apiUserUrl);
+    const response = await fetch(timeSlotapiUrl);
     if (!response.ok) {
-      throw new Error("Failed to fetch users");
+      throw new Error("Failed to fetch Time-Slot");
     }
     const result = await response.json();
     return result.data;
@@ -59,34 +56,17 @@ async function fetchUsers(): Promise<User[]> {
   }
 }
 
-async function fetchTimeslots(): Promise<Timeslot[]> {
-  try {
-    const response = await fetch(apiTimeSlotUrl);
-    if (!response.ok) {
-      throw new Error("Failed to fetch timeSlot");
-    }
-    const result = await response.json();
-    return result.data;
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
-}
-
-export default function ReservationPage() {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
-  const [timeSlots,setTimeSlots] = useState<Timeslot[]>([])
-  const [selectedReservation, setSelectedReservation] =
-    useState<Reservation | null>(null);
+export default function RoomTimeSlotPage() {
+  const [roomTimeSlots, setRoomTimeSlots] = useState<RoomTimeSlot[]>([]);
+  const [selectedRoomTimeSlot, setSelectedRoomTimeSlot] = useState<RoomTimeSlot | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [timeSlots, setTimeSlots] = useState<Timeslot[]>([]);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [reservationIdToDelete, setReservationIdToDelete] = useState<
-    string | null
-  >(null);
+  const [roomTimeSlotIdToDelete, setRoomTimeSlotIdToDelete] = useState<string | null>(null);
   const { addAlert } = useGlobalContext();
+
+  
   const handleAddAlert = (
     iconName: keyof typeof Icons,
     title: string,
@@ -106,62 +86,60 @@ export default function ReservationPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const fetchedReservations = await fetchReservation();
+      const fetchedReservations = await fetchRoomTimeSlots();
       const fetchedRooms = await fetchRooms();
-      const fetchedUsers = await fetchUsers();
-      const fetchTimeSlots = await fetchTimeslots();
-      setReservations(fetchedReservations);
+      const fetchedTimeslots = await fetchTimeSlots();
+      setRoomTimeSlots(fetchedReservations);
       setRooms(fetchedRooms);
-      setUsers(fetchedUsers);
-      setTimeSlots(fetchTimeSlots);
+      setTimeSlots(fetchedTimeslots);
     };
 
     fetchData();
   }, []);
 
   const handleCreate = () => {
-    setSelectedReservation(null);
+    setSelectedRoomTimeSlot(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (reservation: Reservation) => {
-    setSelectedReservation(reservation);
+  const handleEdit = (roomTimeSlots: RoomTimeSlot) => {
+    setSelectedRoomTimeSlot(roomTimeSlots);
     setIsFormOpen(true);
   };
 
-  const confirmDelete = (reservationId: string) => {
-    setReservationIdToDelete(reservationId);
+  const confirmDelete = (roomTimeSlotsId: string) => {
+    setRoomTimeSlotIdToDelete(roomTimeSlotsId);
     setIsConfirmDialogOpen(true);
   };
 
   const handleDelete = async () => {
-    if (!reservationIdToDelete) return;
+    if (!roomTimeSlotIdToDelete) return;
 
     try {
-      const response = await fetch(`${apiUrl}/${reservationIdToDelete}`, {
+      const response = await fetch(`${apiUrl}/${roomTimeSlotIdToDelete}`, {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error("Failed to delete transaction");
+        throw new Error("Failed to delete room time slot");
       }
-      setReservations(
-        reservations.filter((t) => t.id !== reservationIdToDelete)
+      setRoomTimeSlots(
+        roomTimeSlots.filter((t) => t.id !== roomTimeSlotIdToDelete)
       );
       handleAddAlert(
         "ExclamationCircleIcon",
         "Success",
-        "Transaction deleted successfully",
+        "Room time slot deleted successfully",
         tAlertType.SUCCESS
       );
     } catch (error) {
       console.log(error);
     } finally {
       setIsConfirmDialogOpen(false);
-      setReservationIdToDelete(null);
+      setRoomTimeSlotIdToDelete(null);
     }
   };
 
-  const handleFormSubmit = async (formData: Reservation) => {
+  const handleFormSubmit = async (formData: RoomTimeSlot) => {
     try {
       const method = formData.id ? "PATCH" : "POST";
       const url = apiUrl + (formData.id ? `/${formData.id}` : "");
@@ -176,72 +154,76 @@ export default function ReservationPage() {
 
       if (!response.ok) {
         throw new Error(
-          `Failed to ${method === "POST" ? "create" : "update"} reservation`
+          `Failed to ${method === "POST" ? "create" : "update"} Room time slot`
         );
       }
 
       const result = await response.json();
       if (method === "POST") {
-        setReservations([...reservations, result.data]);
+        setRoomTimeSlots([...roomTimeSlots, result.data]);
       } else {
-        setReservations(
-          reservations.map((t) => (t.id === result.data.id ? result.data : t))
+        setRoomTimeSlots(
+          roomTimeSlots.map((t) => (t.id === result.data.id ? result.data : t))
         );
       }
       setIsFormOpen(false);
       handleAddAlert(
         "ExclamationCircleIcon",
         "Success",
-        "Transaction updated successfully",
+        "Room time slot updated successfully",
         tAlertType.SUCCESS
       );
-      setSelectedReservation(null);
+      setSelectedRoomTimeSlot(null);
     } catch (error) {
       console.log(error);
     }
   };
+
   return (
     <div className="min-h-screen p-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4 px-4 border-b-2">
-          <h1 className="text-3xl font-bold mb-6 text-gray-800">Reservation</h1>
+          <h1 className="text-3xl font-bold mb-6 text-gray-800">
+            Room time slot
+          </h1>
           <button
             onClick={handleCreate}
             className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
           >
-            New Reservation
+            New Room-time-slot
           </button>
         </div>
 
         {isFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <ReservationForm
-              reservation={selectedReservation}
-              onSubmit={handleFormSubmit}
-              onClose={() => setIsFormOpen(false)}
-              rooms={rooms}
-              users={users}
-              timeSlot={timeSlots}
-            />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <RoomTimeSlotForm
+                roomTimeSlot={selectedRoomTimeSlot}
+                onSubmit={handleFormSubmit}
+                onClose={() => setIsFormOpen(false)}
+                rooms={rooms}
+                timeSlot={timeSlots}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
         <div className="flex flex-wrap justify-start">
-          <ReservationTable
-            reservations={reservations}
+          <RoomTimeSlotTable
+            roomTimeSlots={roomTimeSlots}
+            timeSlots={timeSlots}
+            rooms={rooms}
             onEdit={handleEdit}
             onDelete={confirmDelete}
           />
         </div>
       </div>
       <ConfirmDialog
-      isOpen={isConfirmDialogOpen}
-      onConfirm={handleDelete}
-      onClose={() => setIsConfirmDialogOpen(false)}
-      message="Are you sure you want to delete this transaction?"
-    />
+        isOpen={isConfirmDialogOpen}
+        onConfirm={handleDelete}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        message="Are you sure you want to delete this room time slot?"
+      />
     </div>
   );
 }

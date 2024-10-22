@@ -1,27 +1,28 @@
 "server client";
+import { Timeslot } from "@/utils/TimeslotType";
+import * as Icons from "@heroicons/react/24/outline";
 import Modal from "@shared/components/Modal";
 import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import React, { useEffect, useState } from "react";
 import { GrFormClose } from "react-icons/gr";
 import { LiaCheckCircle } from "react-icons/lia";
-import * as Icons from "@heroicons/react/24/outline";
-import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import { Category } from "@/utils/CategoryTypes";
 
-interface CategoryFormProps {
-  category: Category | null;
-  onSubmit: (formData: Category) => Promise<void>;
+interface TimeslotFormProps {
+  timeslot: Timeslot | null;
+  onSubmit: (formData: Timeslot) => Promise<void>;
   onClose: () => void;
 }
 
-const CategoryForm: React.FC<CategoryFormProps> = ({
-  category,
+const TimeSlotForm: React.FC<TimeslotFormProps> = ({
+  timeslot,
   onSubmit,
   onClose,
 }) => {
-  const [formData, setFormData] = useState<Category>({
+  const [formData, setFormData] = useState<Timeslot>({
     id: "",
-    name: { th: "", en: "" },
+    start: "",
+    end: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,32 +45,32 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   };
 
   useEffect(() => {
-    if (category) {
-      setFormData(category);
+    if (timeslot) {
+      setFormData(timeslot);
     }
-  }, [category]);
+  }, [timeslot]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
-    if (!formData.name.en) {
+    if (!formData.start) {
       handleAddAlert(
         "ExclamationCircleIcon",
-        "EN Missing",
-        "En is required",
+        "Stat Time Missing",
+        "Stat time is required",
         tAlertType.WARNING
       );
       setIsSubmitting(false);
       return;
     }
 
-    if (!formData.name.th) {
+    if (!formData.end) {
       handleAddAlert(
         "ExclamationCircleIcon",
-        "TH Missing",
-        "TH is required",
+        "End Time Missing",
+        "End time is required",
         tAlertType.WARNING
       );
       setIsSubmitting(false);
@@ -77,41 +78,39 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
     }
 
     try {
-      const isEditing = !!category?.id;
+      const isEditing = !!timeslot?.id;
 
       await onSubmit({
-        id: isEditing ? category.id : undefined,
-        name: { en: formData.name.en, th: formData.name.th },
+        id: isEditing ? timeslot.id : undefined,
+        start: formData.start,
+        end: formData.end,
       } as any);
 
       setFormData({
-        id: "",
-        name: { th: "", en: "" },
+        id:"",
+        start:"",
+        end:"",
       });
       onClose();
     } catch (error) {
-      setError("Failed to submit category. Please check the form inputs.");
+      setError("Failed to submit timeslot. Please check the form inputs.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = event.target;
-
-    setFormData({
-      ...formData,
-      name: {
-        ...formData.name,
-        [name]: value,
-      },
-    });
+    
+    setFormData({ ...formData, [name]: value });
   };
-
+  
   return (
     <Modal
       isOpen={true}
-      title={category ? "Edit Form" : "Create Form"}
+      title={timeslot ? "Edit Form" : "Create Form"}
       onClose={onClose}
       actions={
         <div className="flex justify-between">
@@ -133,26 +132,26 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
       {error && <p className="text-red-500">{error}</p>}
 
       <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">EN</label>
+        <label className="block text-gray-700 font-medium">Start</label>
         <input
           type="text"
-          name="en"
-          value={formData.name.en}
+          name="start"
+          value={formData.start}
           onChange={handleChange}
-          placeholder="Enter EN name"
+          placeholder="Enter start time"
           required
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
       </div>
 
       <div className="space-y-2">
-        <label className="block text-gray-700 font-medium">TH</label>
+        <label className="block text-gray-700 font-medium">End</label>
         <input
           type="text"
-          name="th"
-          value={formData.name.th}
+          name="end"
+          value={formData.end}
           onChange={handleChange}
-          placeholder="Enter TH name"
+          placeholder="Enter end time"
           required
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
         />
@@ -161,4 +160,4 @@ const CategoryForm: React.FC<CategoryFormProps> = ({
   );
 };
 
-export default CategoryForm;
+export default TimeSlotForm;

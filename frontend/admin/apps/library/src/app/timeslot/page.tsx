@@ -1,21 +1,20 @@
 "use client";
+import ConfirmDialog from "@/components/Timeslot/ConfirmDialog";
+import TimeslotForm from "@/components/Timeslot/TimeslotForm";
+import TimeslotTable from "@/components/Timeslot/TimeslotTable";
+import { Timeslot } from "@/utils/TimeslotType";
 import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { useEffect, useState } from "react";
 
-import CategoryForm from "@/components/Categories/CategoryForm";
-import CategoryTable from "@/components/Categories/CategoryTable";
-import ConfirmDialog from "@/components/Categories/ConfirmDialog";
-import { Category } from "@/utils/CategoryTypes";
+const apiUrl = "http://localhost:8082/api/timeslots";
 
-const apiUrl = "http://localhost:8082/api/book-categories";
-
-async function fetchCategories(): Promise<Category[]> {
+async function fetchTimeslot(): Promise<Timeslot[]> {
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
-      throw new Error("Failed to fetch categories");
+      throw new Error("Failed to fetch timeslot");
     }
     const result = await response.json();
     return result.data;
@@ -25,23 +24,23 @@ async function fetchCategories(): Promise<Category[]> {
   }
 }
 
-export default function CategoriesPage() {
+export default function TimeSlotPage() {
   const { addAlert } = useGlobalContext();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [timeslots, setTimeslots] = useState<Timeslot[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [selectedCategories, setSelectedCategories] = useState<Category | null>(
+  const [selectedTimeslot, setSelectedTimeslot] = useState<Timeslot | null>(
     null
   );
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [catetegoryIdToDelete, setCategoryIdToDelete] = useState<string | null>(
+  const [timeslotIdToDelete, setTimeslotIdToDelete] = useState<string | null>(
     null
   );
 
   useEffect(() => {
     const fetchData = async () => {
-      const fetchedCategories = await fetchCategories();
-      setCategories(fetchedCategories);
+      const fetchedTimeslots = await fetchTimeslot();
+      setTimeslots(fetchedTimeslots);
       setLoading(false);
     };
 
@@ -66,41 +65,41 @@ export default function CategoriesPage() {
   };
 
   const handleCreate = () => {
-    setSelectedCategories(null);
+    setSelectedTimeslot(null);
     setIsFormOpen(true);
   };
 
-  const handleEdit = (category: Category) => {
-    setSelectedCategories(category);
+  const handleEdit = (timeslot: Timeslot) => {
+    setSelectedTimeslot(timeslot);
     setIsFormOpen(true);
   };
 
-  const confirmDelete = (categoryId: string) => {
-    setCategoryIdToDelete(categoryId);
+  const confirmDelete = (timeslotId: string) => {
+    setTimeslotIdToDelete(timeslotId);
     setIsConfirmDialogOpen(true);
   };
 
   const handleDelete = async () => {
-    if (!catetegoryIdToDelete) return;
+    if (!timeslotIdToDelete) return;
   
     try {
-      const response = await fetch(`${apiUrl}/${catetegoryIdToDelete}`, {
+      const response = await fetch(`${apiUrl}/${timeslotIdToDelete}`, {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error("Failed to delete categories");
+        throw new Error("Failed to delete timeslot");
       }
-      setCategories(categories.filter((t) => t.id !== catetegoryIdToDelete));
-      handleAddAlert("ExclamationCircleIcon", "Success", "Category deleted successfully", tAlertType.SUCCESS);
+      setTimeslots(timeslots.filter((t) => t.id !== timeslotIdToDelete));
+      handleAddAlert("ExclamationCircleIcon", "Success", "Transaction deleted successfully", tAlertType.SUCCESS);
     } catch (error) {
       console.log(error);
     } finally {
       setIsConfirmDialogOpen(false);
-      setCategoryIdToDelete(null);
+      setTimeslotIdToDelete(null);
     }
   };
 
-  const handleFormSubmit = async (formData: Category) => {
+  const handleFormSubmit = async (formData: Timeslot) => {
     try {
       const method = formData.id ? "PATCH" : "POST";
       const url = apiUrl + (formData.id ? `/${formData.id}` : "");
@@ -115,26 +114,26 @@ export default function CategoriesPage() {
 
       if (!response.ok) {
         throw new Error(
-          `Failed to ${method === "POST" ? "create" : "update"} categories`
+          `Failed to ${method === "POST" ? "create" : "update"} timeslot`
         );
       }
 
       const result = await response.json();
       if (method === "POST") {
-        setCategories([...categories, result.data]);
+        setTimeslots([...timeslots, result.data]);
       } else {
-        setCategories(
-          categories.map((t) => (t.id === result.data.id ? result.data : t))
+        setTimeslots(
+          timeslots.map((t) => (t.id === result.data.id ? result.data : t))
         );
       }
       setIsFormOpen(false);
       handleAddAlert(
         "ExclamationCircleIcon",
         "Success",
-        "Category updated successfully",
+        "Timeslot updated successfully",
         tAlertType.SUCCESS
       );
-      setSelectedCategories(null);
+      setSelectedTimeslot(null);
     } catch (error) {
       console.log(error);
     }
@@ -149,18 +148,18 @@ export default function CategoriesPage() {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-4 px-4 border-b-2">
           <h1 className="text-3xl font-bold mb-6 text-gray-800">
-            Categories
+            Timeslot
           </h1>
           <button
             onClick={handleCreate}
             className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
           >
-            New Categories
+            New Timeslot
           </button>
         </div>
         <div className="flex flex-wrap justify-start">
-          <CategoryTable
-            categories={categories}
+          <TimeslotTable
+            timeslots={timeslots}
             onEdit={handleEdit}
             onDelete={confirmDelete}
           />
@@ -169,8 +168,8 @@ export default function CategoriesPage() {
         {isFormOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-              <CategoryForm
-                category={selectedCategories}
+              <TimeslotForm
+                timeslot={selectedTimeslot}
                 onSubmit={handleFormSubmit}
                 onClose={() => setIsFormOpen(false)}
               />
@@ -182,7 +181,7 @@ export default function CategoriesPage() {
         isOpen={isConfirmDialogOpen}
         onConfirm={handleDelete}
         onClose={() => setIsConfirmDialogOpen(false)}
-        message="Are you sure you want to delete this category?"
+        message="Are you sure you want to delete this time slot?"
       />
     </div>
   );

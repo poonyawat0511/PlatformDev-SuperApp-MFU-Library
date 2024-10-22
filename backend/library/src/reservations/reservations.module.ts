@@ -5,6 +5,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 import { Reservation, ReservationSchema } from "./schemas/reservation.schema";
 import { RoomsModule } from "src/rooms/rooms.module";
 import { RoomTimeslotsModule } from "src/room-timeslots/room-timeslots.module";
+import { UsersModule } from "src/users/users.module";
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { RoomTimeslotsModule } from "src/room-timeslots/room-timeslots.module";
     ]),
     forwardRef(() => RoomsModule),
     forwardRef(() => RoomTimeslotsModule),
+    forwardRef(() => UsersModule),
   ],
   controllers: [ReservationsController],
   providers: [ReservationsService],
