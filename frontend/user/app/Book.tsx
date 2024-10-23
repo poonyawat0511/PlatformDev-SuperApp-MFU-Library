@@ -148,7 +148,9 @@ export default function BookPage() {
                     <Text style={styles.modalDetails}>Status: {selectedBook.status}</Text>
                     <Text style={styles.modalDetails}>Quantity: {selectedBook.quantity}</Text>
                     <Text style={styles.modalDetails}>ISBN: {selectedBook.ISBN}</Text>
+                    <Text style={styles.modalDetails}> </Text>
                     <Button title="Borrow this book" onPress={borrowBook} />
+                    <Text style={styles.modalDetails}> </Text>
                     <Button title="Close" onPress={closeModal} />
                   </>
                 )}
