@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Image, ActivityIndicator, ImageBackground, StyleSheet, Button, FlatList, Alert } from 'react-native';
+import { View, Text, Image, ScrollView, ActivityIndicator, ImageBackground, StyleSheet, Button, FlatList, Alert } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -20,6 +20,9 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
   const router = useRouter();
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+
 
   const fetchProfileAndReservations = async () => {
     try {
@@ -29,12 +32,52 @@ export default function Profile() {
       const reservationResponse = await axios.get('http://192.168.1.37:8082/api/reservations/');
       const userReservations = reservationResponse.data.data.filter((res: Reservation) => res.user.username === profileResponse.data.username);
       setReservations(userReservations);
+      await fetchTransactions(profileResponse.data.username);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const fetchTransactions = async (username: string) => {
+    try {
+      const transactionResponse = await axios.get('http://192.168.1.37:8082/api/transactions/');
+  
+      // Filter transactions by username
+      const userTransactions = transactionResponse.data.data.filter((transaction: any) => transaction.user.username === username);
+  
+      // Fetch renew status for each transaction
+      const renewPromises = userTransactions.map(async (transaction: any) => {
+        try {
+          // Fetch renew status for each transaction
+          const renewResponse = await axios.get(`http://192.168.1.37:8082/api/renews/?transaction=${transaction.id}`);
+          
+          // If renew request exists (status 200)
+          if (renewResponse.data.data) {
+            return { ...transaction, renewStatus: renewResponse.data.data.status };  // Return transaction with its renewStatus
+          }
+          return { ...transaction, renewStatus: 'none' };
+
+        } catch (error) {
+          // Handle 404 error, meaning no renew request exists for this transaction
+            return { ...transaction, renewStatus: 'none' };  // No renews found, return 'none'
+        }
+      });
+  
+      // Wait for all renew status promises to resolve
+      const transactionsWithRenewStatus = await Promise.all(renewPromises);
+      setTransactions(transactionsWithRenewStatus);
+    } catch (error) {
+      console.error('Error fetching transactions:', error);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+  
+
+
+
 
   useEffect(() => {
     fetchProfileAndReservations();
@@ -60,6 +103,19 @@ export default function Profile() {
     }
   };
 
+  const handleRenew = async (transactionId: string) => {
+    try {
+      const response = await axios.post('http://192.168.1.37:8082/api/renews/', { transaction: transactionId });
+      if (response.status === 200) {
+        Alert.alert('Success', 'Renew request sent successfully.');
+        fetchTransactions(profile?.username || ''); // Reload transactions
+      }
+    } catch (error) {
+      console.error('Error sending renew request:', error);
+      Alert.alert('Error', 'Failed to send renew request.');
+    }
+  };
+
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
@@ -70,36 +126,45 @@ export default function Profile() {
       imageStyle={{ opacity: 0.5 }}
       style={styles.background}
     >
-      <View style={styles.container}>
-        <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
-          <Image source={require('../assets/images/LibraryMFUprofile.png')} />
-        </View>
+      <ScrollView>
+        <View style={styles.container}>
+          <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
+            <Image source={require('../assets/images/LibraryMFUprofile.png')} />
+          </View>
 
-        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.username}</Text>
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.email}</Text>
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}> </Text>
+          <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.username}</Text>
+            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.email}</Text>
+          </View>
           <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Your Room Reservation</Text>
-        </View>
 
-        <FlatList
-          data={reservations}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={styles.reservationCard}>
+          {reservations.map((item) => (
+            <View key={item.id} style={styles.reservationCard}>
               <Text>Room: {item.room.room}</Text>
               <Text>Time: {item.timeSlot.start} - {item.timeSlot.end}</Text>
               <Text>Type: {item.type}</Text>
             </View>
-          )}
-          ListEmptyComponent={<Text>You have no reservations.</Text>}
-          contentContainerStyle={reservations.length === 0 ? styles.emptyList : null}
-        />
+          ))}
 
-        <View style={styles.logoutButton}>
-          <Button title="Logout" color="#E64646" onPress={handleLogout} />
+          {transactions.length > 0 && (
+            <>
+              <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20 }}>Borrowed Books</Text>
+              {transactions.map((item) => (
+                <View key={item.id} style={styles.transactionCard}>
+                  <Text>Book: {item.book.name.en}</Text>
+                  <Text>Borrow Date: {new Date(item.borrowDate).toLocaleDateString()}</Text>
+                  <Text>Due Date: {new Date(item.dueDate).toLocaleDateString()}</Text>
+                </View>
+              ))}
+            </>
+          )}
+
+
+          <View style={styles.logoutButton}>
+            <Button title="Logout" color="#E64646" onPress={handleLogout} />
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </ImageBackground>
   );
 }
@@ -127,8 +192,22 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyList: {
-    flexGrow: 1,
+    flexGrow: 0.3,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  transactionCard: {
+    padding: 10,
+    margin: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    width: 300,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookImage: {
+    width: 100,
+    height: 150,
+    marginBottom: 10,
   },
 });
