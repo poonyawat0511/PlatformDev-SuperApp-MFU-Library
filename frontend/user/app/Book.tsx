@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Image, ImageBackground, TouchableOpacity, Modal, Button, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, Image, ImageBackground, TouchableOpacity, Modal, Button, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import axios from 'axios';
 import PagerView from 'react-native-pager-view';
 import { useFocusEffect } from '@react-navigation/native'; 
+import { format } from 'date-fns'; // You can use this library to handle dates easily
 
 interface Book {
   id: string;
@@ -19,6 +20,7 @@ export default function BookPage() {
   const [loading, setLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [username, setUsername] = useState<string | null>(null); // Store the username
 
   // Fetch books from the API
   const fetchBooks = async () => {
@@ -36,9 +38,19 @@ export default function BookPage() {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      const response = await axios.get('http://192.168.1.37:8082/api/users/profile');
+      setUsername(response.data.username);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
-      fetchBooks(); 
+      fetchBooks();
+      fetchProfile(); 
     }, [])
   );
 
@@ -50,6 +62,33 @@ export default function BookPage() {
   const closeModal = () => {
     setIsModalVisible(false);
     setSelectedBook(null);
+  };
+
+  const borrowBook = async () => {
+    if (!username || !selectedBook) {
+      return;
+    }
+
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const dueDate = format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
+
+    try {
+      const response = await axios.post('http://192.168.1.37:8082/api/transactions/', {
+        user: username,
+        book: selectedBook.ISBN,
+        status: 'borrow',
+        borrowDate: today,
+        dueDate: dueDate,
+      });
+
+      if (response.data) {
+        Alert.alert('Success', 'Book borrowed successfully!');
+        closeModal(); // Close modal after borrowing
+      }
+    } catch (error) {
+      console.error('Error borrowing book:', error);
+      Alert.alert('Error', 'Failed to borrow the book.');
+    }
   };
 
   // Pagination logic (6 items per page)
@@ -109,11 +148,8 @@ export default function BookPage() {
                     <Text style={styles.modalDetails}>Status: {selectedBook.status}</Text>
                     <Text style={styles.modalDetails}>Quantity: {selectedBook.quantity}</Text>
                     <Text style={styles.modalDetails}>ISBN: {selectedBook.ISBN}</Text>
-                    <Text style={styles.modalDetails}> </Text>
-                    <Button title="Reserve this book" onPress={() => { /* Placeholder */ }} />
-                    <Text style={styles.modalDetails}> </Text>
+                    <Button title="Borrow this book" onPress={borrowBook} />
                     <Button title="Close" onPress={closeModal} />
-                    <Text style={styles.modalDetails}> </Text>
                   </>
                 )}
               </ScrollView>
@@ -132,31 +168,18 @@ const styles = StyleSheet.create({
   card: { flex: 1, margin: 10, backgroundColor: '#e7e7e7', borderRadius: 10, padding: 10 },
   bookImage: { width: 100, height: 150, resizeMode: 'contain' },
   bookName: { textAlign: 'center', marginTop: 10 },
-  modalView: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-  modalContent: { backgroundColor: '#e7e7e7', padding: 20, borderRadius: 10, alignItems: 'center' },
+  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
+  modal: { width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10 },
   modalImage: { width: 200, height: 300, marginBottom: 20 },
   modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
   modalDescription: { fontSize: 16, marginBottom: 10 },
   modalDetails: { fontSize: 14, marginBottom: 5 },
-  modalContainer: {
-    flex: 1,
-    justifyContent: 'center', // Center vertically
-    alignItems: 'center', // Center horizontally
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Optional: dim background
-  },
-  modal: {
-    width: 300, // Set a fixed width
+  background: { flex: 1, resizeMode: 'cover' },
+  modalContent: {
+    backgroundColor: '#e7e7e7',
     padding: 20,
-    backgroundColor: 'white',
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    alignItems: 'center',
   },
-  background: {
-    flex: 1,
-    resizeMode: 'cover', 
-  },
+  
 });
