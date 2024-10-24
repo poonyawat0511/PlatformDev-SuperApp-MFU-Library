@@ -79,12 +79,12 @@ export default function RoomsPage() {
   }, []);
 
   const handleCreate = () => {
-    setEditingRoom(null);
+    setSelectedRoom(null);
     setIsFormOpen(true);
   };
 
   const handleEdit = (room: Room) => {
-    setEditingRoom(room);
+    setSelectedRoom(room);
     setIsFormOpen(true);
   };
 
