@@ -1,139 +1,243 @@
+"server client";
 import { Room } from "@/utils/RoomTypes";
 import { RoomType } from "@/utils/RoomtypeTypes";
+import * as Icons from "@heroicons/react/24/outline";
+import Modal from "@shared/components/Modal";
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import React, { useEffect, useState } from "react";
+import { GrFormClose } from "react-icons/gr";
+import { LiaCheckCircle } from "react-icons/lia";
 
 interface RoomFormProps {
-  room?: Room | null;
-  onSubmit: (data: Room) => void;
+  room: Room | null;
+  onSubmit: (formData: Room) => Promise<void>;
   onClose: () => void;
+  roomTypes: RoomType[];
 }
 
-export default function RoomForm({ room, onSubmit, onClose }: RoomFormProps) {
-  const [roomNumber, setRoomNumber] = useState<number>(0);
-  const [floor, setFloor] = useState<number>(0);
-  const [status, setStatus] = useState<string>("ready");
-  const [type, setType] = useState<string>(""); // Changed to string to store MongoDB ID
-  const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
+const RoomForm: React.FC<RoomFormProps> = ({ room, onSubmit, onClose }) => {
+  const [formData, setFormData] = useState<Room>({
+    id: "",
+    room: 0,
+    floor: 0,
+    status: "ready",
+    type: { id: "", name: { th: "", en: "" } },
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [roomTypes, setRoomTyps] = useState<RoomType[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+
+  const { addAlert } = useGlobalContext();
+  const handleAddAlert = (
+    iconName: keyof typeof Icons,
+    title: string,
+    message: string,
+    type: tAlertType
+  ) => {
+    const newAlert: tAlert = {
+      title: title,
+      message: message,
+      buttonText: "X",
+      iconName: iconName,
+      type: type,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    addAlert(newAlert);
+  };
 
   useEffect(() => {
-    if (room) {
-      setRoomNumber(room.room);
-      setFloor(room.floor);
-      setStatus(room.status);
-      setType(room.type.id); // Use ID as string
-    }
-  }, [room]);
-
-  useEffect(() => {
-    const fetchRoomTypes = async () => {
+    async function fetchRoomTypes() {
       try {
         const response = await fetch("http://localhost:8082/api/room-types");
-        const data = await response.json();
-        setRoomTypes(data.data);
+        const result = await response.json();
+        console.log("Fetched room-types:", result.data);
+        setRoomTyps(result.data);
       } catch (error) {
-        console.error("Error fetching room types:", error);
+        console.error("Failed to fetch room-types", error);
       }
-    };
-
+    }
     fetchRoomTypes();
   }, []);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (room) {
+      setFormData(room);
+    }
+  }, [room]);
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
 
-    const data: Room = {
-      id: room?.id || "",
-      room: roomNumber,
-      floor,
-      status:"ready",
-      type: type,
-    };
+    if (!formData.room) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Room Missing",
+        "Room is required",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
 
-    onSubmit(data);
+    if (!formData.floor) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Floor Missing",
+        "Floor is required",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.status) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Status Missing",
+        "Status is required",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!formData.type.id) {
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Floor Missing",
+        "Floor is required",
+        tAlertType.WARNING
+      );
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const isEditing = !!room?.id;
+
+      await onSubmit({
+        id: isEditing ? room.id : undefined,
+        room: formData.room,
+        floor: formData.floor,
+        status: formData.status,
+        type: formData.type.id,
+      } as any);
+
+      setFormData({
+          id: "",
+          room: 0,
+          floor: 0,
+          status: "ready",
+          type: { id: "", name: { th: "", en: "" } },
+      });
+      onClose();
+    } catch (error) {
+      setError("Failed to submit room. Please check the form inputs.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = event.target;
+    if (name === "type") {
+      const selectedType = roomTypes.find((type) => type.id === value);
+      setFormData({ ...formData, type: selectedType || { id: "", name: { th: "", en: "" } } });
+    } else {
+      setFormData({ ...formData, [name]: name === "room" || name === "floor" ? Number(value) : value });
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded shadow-lg w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">
-          {room ? "Edit Room" : "Create Room"}
-        </h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Room Number
-            </label>
-            <input
-              type="number"
-              value={roomNumber}
-              onChange={(e) => setRoomNumber(Number(e.target.value))}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Floor
-            </label>
-            <input
-              type="number"
-              value={floor}
-              onChange={(e) => setFloor(Number(e.target.value))}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            />
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Status
-            </label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            >
-              <option value="ready">Ready</option>
-              <option value="not ready">Not Ready</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
-              Room Type
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              required
-            >
-              <option value="" disabled>
-                Select a room type
-              </option>
-              {roomTypes.map((roomType) => (
-                <option key={roomType.id} value={roomType.id}>
-                  {roomType.name.th} / {roomType.name.en}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              className="bg-gray-500 text-white px-4 py-2 rounded mr-2"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              {room ? "Update" : "Create"}
-            </button>
-          </div>
-        </form>
+    <Modal
+      isOpen={true}
+      title={room ? "Edit Form" : "Create Form"}
+      onClose={onClose}
+      actions={
+        <div className="flex justify-between">
+          <button
+            onClick={handleSubmit}
+            className="bg-black text-white px-2 py-2 rounded-full"
+          >
+            <LiaCheckCircle className="size-6" />
+          </button>
+          <button
+            onClick={onClose}
+            className="bg-gray-500 text-white px-2 py-2 rounded-full ml-6"
+          >
+            <GrFormClose className="size-6" />
+          </button>
+        </div>
+      }
+    >
+      {error && <p className="text-red-500">{error}</p>}
+
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-medium">Room</label>
+        <input
+          type="number"
+          name="room"
+          value={formData.room}
+          onChange={handleChange}
+          placeholder="Enter room"
+          required
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+        />
       </div>
-    </div>
+
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-medium">Floor</label>
+        <input
+          type="number"
+          name="floor"
+          value={formData.floor}
+          onChange={handleChange}
+          placeholder="Enter floor"
+          required
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-medium">Select Type</label>
+        <select
+          name="type"
+          value={formData.type.id || ""}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"
+        >
+          <option value="" disabled>
+            Select a room
+          </option>
+          {roomTypes.map((roomType) => (
+            <option key={roomType.id} value={roomType.id}>
+              {roomType.name.en} - {roomType.name.th}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-gray-700 font-medium">Status</label>
+        <select
+          name="status"
+          value={formData.status}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border border-gray-300 rounded-lg focus:ri ng focus:ring-blue-200 focus:border-blue-500"
+        >
+          <option value="">Select status</option>
+          <option value="ready">ready</option>
+          <option value="not ready">not ready</option>
+        </select>
+      </div>
+    </Modal>
   );
-}
+};
+
+export default RoomForm;
