@@ -4,65 +4,66 @@ import { LiaPenFancySolid } from "react-icons/lia";
 
 interface RoomTableProps {
   rooms: Room[];
-  onEdit: (room: Room) => void;
-  onDelete: (roomId: string) => void;
+  onEdit: (rooms: Room) => void;
+  onDelete: (roomsId: string) => void;
 }
 
-const RoomTable: React.FC<RoomTableProps> = ({ rooms, onEdit, onDelete }) => {
+export default function RoomTable({
+  rooms,
+  onEdit,
+  onDelete,
+}: RoomTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
           <tr>
-            <th className="px-6 py-3 text-center">Room Number</th>
+            <th className="px-6 py-3 text-center">Room</th>
             <th className="px-6 py-3 text-center">Floor</th>
             <th className="px-6 py-3 text-center">Status</th>
-            <th className="px-6 py-3 text-center">Room Type</th>
+            <th className="px-6 py-3 text-center">Type EN</th>
+            <th className="px-6 py-3 text-center">Type TH</th>
             <th className="px-6 py-3 text-center">Actions</th>
           </tr>
         </thead>
         <tbody className="text-gray-700">
-          {rooms.length > 0 ? (
-            rooms.map((room) => (
+          {rooms.map((room) => {
+            return (
               <tr key={room.id} className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4 text-center">{room.room}</td>
-                <td className="px-6 py-4 text-center">{room.floor}</td>
-                <td className="px-6 py-4 text-center">{room.status}</td>
                 <td className="px-6 py-4 text-center">
-                  {/* Check if room.type is an object (RoomType) before accessing 'name' */}
-                  {typeof room.type === "object" && room.type !== null ? (
-                    room.type.name?.en || "Unknown Type"
-                  ) : (
-                    "Unknown Type"
-                  )}
+                  {room.room}
                 </td>
-                <td className="px-6 py-4 flex space-x-2 justify-center">
+                <td className="px-6 py-4 text-center">
+                  {room.floor}
+                </td>
+                <td className="px-6 py-4 capitalize text-center">
+                  {room.status || "-"}
+                </td>
+                <td className="px-6 py-4 capitalize text-center">
+                  {room.type.name?.en|| "-"}
+                </td>
+                <td className="px-6 py-4 capitalize text-center">
+                  {room.type.name?.th|| "-"}
+                </td>
+                <td className="px-6 py-4 flex space-x-2 text-center justify-center">
                   <button
                     onClick={() => onEdit(room)}
-                    className="bg-white text-black px-2 py-2 rounded-full border border-gray-300 hover:bg-gray-200"
+                    className="bg-white text-black px-2 py-2 rounded-full border border-gray"
                   >
-                    <LiaPenFancySolid className="w-5 h-5" />
+                    <LiaPenFancySolid className="size-5" />
                   </button>
                   <button
-                    onClick={() => onDelete(room.id)}
-                    className="bg-black text-white px-2 py-2 rounded-full border border-gray-300 hover:bg-gray-700"
+                    onClick={() => room.id && onDelete(room.id)}
+                    className="bg-black text-white px-2 py-2 rounded-full border border-gray"
                   >
-                    <BsTrashFill className="w-5 h-5" />
+                    <BsTrashFill className="size-5" />
                   </button>
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan={5} className="text-center py-4">
-                No rooms available
-              </td>
-            </tr>
-          )}
+            );
+          })}
         </tbody>
       </table>
     </div>
   );
-};
-
-export default RoomTable;
+}
