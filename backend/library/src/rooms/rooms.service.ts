@@ -33,7 +33,8 @@ export class RoomsService {
     try {
       const roomDoc = new this.roomModel(createRoomDto);
       const room = await roomDoc.save();
-      return room.toObject();
+      const populateRoom = await room.populate(POPULATE_PIPE)
+      return populateRoom.toObject();
     } catch (error) {
       if (error.code === 11000) {
         throw new ConflictException(
@@ -77,7 +78,7 @@ export class RoomsService {
       }
       const options = { new: true };
       const room = await this.roomModel
-        .findByIdAndUpdate(id, updateRoomDto, options)
+        .findByIdAndUpdate(id, updateRoomDto, options).populate(POPULATE_PIPE)
         .lean();
       return room;
     } catch (error) {

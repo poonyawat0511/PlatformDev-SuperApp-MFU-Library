@@ -73,7 +73,7 @@ export default function TransactionTable({
                   {transaction.status === "borrow" && (
                     <button
                       onClick={() => transaction.id && onRenew(transaction.id)}
-                      className="text-green px-2 py-2"
+                      className="bg-gary-500 text-green px-2 py-2 rounded-full border border-gray"
                     >
                       <MdAutorenew size={18} />
                     </button>
