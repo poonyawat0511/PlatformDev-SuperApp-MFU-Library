@@ -25,7 +25,7 @@ export default function Home() {
   const [roomReservationData, setRoomReservationData] = useState({
     labels: ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday'],
     datasets: [
-      { label: 'Confirmed Reservations', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#161D6F' },
+      { label: 'Confirmed Reservations', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#F6FA70' },
       { label: 'Pending Reservations', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#C7FFD8' },
     ],
   });
