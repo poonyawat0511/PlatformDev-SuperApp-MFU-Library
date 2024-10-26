@@ -1,9 +1,9 @@
 "use client";
-import { useRouter } from 'next/navigation';
 import * as Icons from '@heroicons/react/24/outline';
+import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title, Tooltip } from 'chart.js';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { useState, useEffect } from 'react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -161,7 +161,13 @@ export default function Home() {
   };
 
   return (
-    <main className="flex flex-col gap-4 items-start justify-items-start">
+    <main className="min-h-screen p-6">
+      <div className="container mx-auto">
+      <div className="flex justify-between items-center mb-4 px-4 border-b-2">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800">
+            Menu
+          </h1>
+      </div>
       <div className="w-full p-4 rounded-lg border-2 border-gray-300">
         <div className="grid grid-cols-3 gap-4">
           {sectionList.map((section, index) => {
@@ -242,6 +248,7 @@ export default function Home() {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </main>
   );
