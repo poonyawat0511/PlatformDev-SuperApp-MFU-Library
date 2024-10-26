@@ -10,7 +10,6 @@ interface LoginResult {
 export default function LoginPage() {
   const [state, setState] = useState<{ message: string }>({ message: "" });
 
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -33,36 +32,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+    <div 
+      className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
+      style={{ 
+      backgroundImage: `url('https://i.ibb.co/WpZBbjs/mfu-bg2.png')`,
+      backgroundSize: '80%', 
+      backgroundPosition: 'center', 
+      backgroundRepeat: 'no-repeat',
+       }}
+    >
+      <div className="bg-white/30 backdrop-blur-md p-8 rounded-lg shadow-lg w-full max-w-md border border-white/10 relative z-10">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <img
+            src="https://i.ibb.co/hRMG4kt/mfu-logo.png"
+            alt="mfu-logo"
+            className="h-20 w-auto"
+          />
+        </div>
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
           Login to Your Account
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block mb-2 text-sm text-gray-600" htmlFor="email">
+            <label className="block mb-2 text-sm text-black" htmlFor="email">
               Email
             </label>
             <input
               type="text"
               name="email"
               id="email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200"
+              className="w-full px-3 py-2 border border-black-300 rounded-full focus:outline-none focus:ring focus:ring-blue-200"
               required
             />
           </div>
           <div>
-            <label
-              className="block mb-2 text-sm text-gray-600"
-              htmlFor="password"
-            >
+            <label className="block mb-2 text-sm text-black" htmlFor="password">
               Password
             </label>
             <input
               type="password"
               name="password"
               id="password"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring focus:ring-blue-200"
+              className="w-full px-3 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring focus:ring-blue-200"
               required
             />
           </div>
@@ -71,16 +83,16 @@ export default function LoginPage() {
           )}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition duration-300"
+            className="w-full bg-black text-white py-2 rounded-full hover-gray transition duration-300"
           >
             Login
           </button>
         </form>
-        <div className="mt-6 text-center text-sm text-gray-600">
+        <div className="mt-6 text-center text-sm text-black-100">
           Don't have an account?{" "}
           <a
             href="/auth/register"
-            className="text-blue-600 hover:underline hover:text-blue-800"
+            className="text-blue-600 hover:underline hover:text-blue-500"
           >
             Sign Up
           </a>
