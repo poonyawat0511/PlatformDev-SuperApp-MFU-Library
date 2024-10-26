@@ -15,42 +15,77 @@ interface Reservation {
   type: 'confirmed' | 'pending';
 }
 
-interface ApiResponse {
-  data: Reservation[];
+interface Book {
+  id: string;
+  name: {
+    th: string;
+    en: string;
+  };
+  ISBN: string;
+  bookImage: string;
+}
+
+interface User {
+  id: string;
+  username: string;
+}
+
+interface Transaction {
+  user: User;
+  book: Book;
+  status: 'borrow' | 'return';
+  borrowDate: string;
+  returnDate: string | null;
+}
+
+interface ApiResponse<T> {
+  data: T[];
 }
 
 export default function Home() {
   const router = useRouter();
 
+  // States for room reservations
   const [roomReservationData, setRoomReservationData] = useState({
-    labels: ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday'],
+    labels: ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday', 'Today'],
     datasets: [
-      { label: 'Confirmed Reservations', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#F6FA70' },
-      { label: 'Pending Reservations', data: [0, 0, 0, 0, 0, 0, 0], backgroundColor: '#C7FFD8' },
+      { label: 'Confirmed Reservations', data: [0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#A5B68D' },
+      { label: 'Pending Reservations', data: [0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#181C14' },
     ],
   });
 
   const [recentReservations, setRecentReservations] = useState<Reservation[]>([]);
 
+  // States for transactions
+  const [transactionData, setTransactionData] = useState({
+    labels: ['7 days ago', '6 days ago', '5 days ago', '4 days ago', '3 days ago', '2 days ago', 'Yesterday', 'Today'],
+    datasets: [
+      { label: 'Borrowed', data: [0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#DBCBBD' },
+      { label: 'Returned', data: [0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#31511E' },
+    ],
+  });
+
+  const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+
   useEffect(() => {
     const fetchRoomReservations = async () => {
       try {
         const response = await fetch('http://localhost:8082/api/reservations');
-        const data: ApiResponse = await response.json();
+        const data: ApiResponse<Reservation> = await response.json();
 
-        const confirmedData = new Array(7).fill(0);
-        const pendingData = new Array(7).fill(0);
+        const confirmedData = new Array(8).fill(0);
+        const pendingData = new Array(8).fill(0);
 
         data.data.forEach((reservation: Reservation) => {
           const reservationDate = new Date(reservation.dateTime);
           const today = new Date();
           const diffDays = Math.floor((today.getTime() - reservationDate.getTime()) / (1000 * 3600 * 24));
 
-          if (diffDays >= 0 && diffDays < 7) {
+          if (diffDays >= 0 && diffDays < 8) {
             if (reservation.type === "confirmed") {
-              confirmedData[6 - diffDays] += 1;
+              confirmedData[7 - diffDays] += 1;
             } else if (reservation.type === "pending") {
-              pendingData[6 - diffDays] += 1;
+              pendingData[7 - diffDays] += 1;
             }
           }
         });
@@ -69,7 +104,44 @@ export default function Home() {
       }
     };
 
+    const fetchTransactions = async () => {
+      try {
+        const response = await fetch('http://localhost:8082/api/transactions');
+        const data: ApiResponse<Transaction> = await response.json();
+    
+        const borrowedData = new Array(8).fill(0);
+        const returnedData = new Array(8).fill(0);
+    
+        data.data.forEach((transaction: Transaction) => {
+          const transactionDate = transaction.status === 'borrow' ? new Date(transaction.borrowDate) : (transaction.returnDate ? new Date(transaction.returnDate) : null);
+          const today = new Date();
+          const diffDays = transactionDate ? Math.floor((today.getTime() - transactionDate.getTime()) / (1000 * 3600 * 24)) : -1;
+    
+          if (diffDays >= 0 && diffDays < 8) {
+            if (transaction.status === "borrow") {
+              borrowedData[7 - diffDays] += 1;
+            } else if (transaction.status === "return") {
+              returnedData[7 - diffDays] += 1;
+            }
+          }
+        });
+    
+        setTransactionData((prev) => ({
+          ...prev,
+          datasets: [
+            { ...prev.datasets[0], data: borrowedData },
+            { ...prev.datasets[1], data: returnedData },
+          ],
+        }));
+    
+        setRecentTransactions(data.data.slice(0, 10));
+      } catch (error) {
+        console.error("Failed to fetch transaction data:", error);
+      }
+    };
+    
     fetchRoomReservations();
+    fetchTransactions();
   }, []);
 
   const sectionList = [
@@ -111,51 +183,68 @@ export default function Home() {
       <div className="flex w-full gap-4">
         <div className="w-full bg-white p-4 rounded-lg shadow-lg">
           <h2 className="text-2xl font-semibold mb-4">Room Reservations</h2>
-          <Bar
-            data={roomReservationData}
-            options={{
-              responsive: true,
-              plugins: {
-                legend: { position: 'top' },
-                title: { display: true, text: 'Room Reservations Over the Last Week' },
-              },
-              scales: {
-                x: { stacked: true },
-                y: { 
-                  stacked: false,
-                  beginAtZero: true,
-                  ticks: {
-                    precision: 0,
-                  }
-                },
-              },
-            }}
-          />
+          <Bar data={roomReservationData} />
         </div>
       </div>
 
-      <div className="w-full bg-white p-4 rounded-lg shadow-lg mt-4">
+      {/* Recent Reservations */}
+      <div className="w-full bg-white p-4 rounded-lg shadow-lg">
         <h2 className="text-2xl font-semibold mb-4">Recent Room Reservations</h2>
-        <ul className="space-y-2">
-          {recentReservations.length > 0 ? (
-            recentReservations.map((reservation, index) => (
-              <li key={index} className="border-b pb-2">
-                <div>
-                  <strong>Room:</strong> {reservation.room.room}
-                </div>
-                <div>
-                  <strong>Date:</strong> {new Date(reservation.dateTime).toLocaleDateString()}
-                </div>
-                <div>
-                  <strong>Status:</strong> {reservation.type}
-                </div>
-              </li>
-            ))
-          ) : (
-            <p>No recent reservations available.</p>
-          )}
-        </ul>
+        <table className="min-w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border px-4 py-2">Room</th>
+              <th className="border px-4 py-2">Date & Time</th>
+              <th className="border px-4 py-2">Type</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentReservations.map((reservation, index) => (
+              <tr key={index}>
+                <td className="border px-4 py-2">{reservation.room.room}</td>
+                <td className="border px-4 py-2">{new Date(reservation.dateTime).toLocaleString()}</td>
+                <td className="border px-4 py-2">{reservation.type}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="flex w-full gap-4">
+        <div className="w-full bg-white p-4 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-semibold mb-4">Transactions</h2>
+          <Bar data={transactionData} />
+        </div>
+      </div>
+
+      {/* Recent Transactions */}
+      <div className="w-full bg-white p-4 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-semibold mb-4">Recent Transactions</h2>
+        <table className="min-w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="border px-4 py-2">User</th>
+              <th className="border px-4 py-2">Book</th>
+              <th className="border px-4 py-2">Status</th>
+              <th className="border px-4 py-2">Borrow Date</th>
+              <th className="border px-4 py-2">Return Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recentTransactions.map((transaction, index) => (
+              <tr key={index}>
+                <td className="border px-4 py-2">{transaction.user.username}</td>
+                <td className="border px-4 py-2">{transaction.book.name.en}</td>
+                <td className="border px-4 py-2">{transaction.status}</td>
+                <td className="border px-4 py-2">{new Date(transaction.borrowDate).toLocaleDateString()}</td>
+                <td className="border px-4 py-2">{transaction.returnDate ? new Date(transaction.returnDate).toLocaleDateString() : '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </main>
   );
 }
+
+
