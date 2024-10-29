@@ -1,9 +1,9 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Image, ImageBackground, TouchableOpacity, Modal, Button, ScrollView, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
-import PagerView from 'react-native-pager-view';
-import { useFocusEffect } from '@react-navigation/native'; 
 import { format } from 'date-fns'; // You can use this library to handle dates easily
+import React, { useCallback, useState } from 'react';
+import { ActivityIndicator, Alert, Button, FlatList, Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import PagerView from 'react-native-pager-view';
 
 interface Book {
   id: string;
@@ -25,10 +25,10 @@ export default function BookPage() {
   // Fetch books from the API
   const fetchBooks = async () => {
     try {
-      const response = await axios.get('http://192.168.1.37:8082/api/books/');
+      const response = await axios.get('http://172.25.208.1:8082/api/books/');
       const updatedBooks = response.data.data.map((book: Book) => ({
         ...book,
-        bookImage: book.bookImage.replace('http://127.0.0.1', 'http://192.168.1.37'), // Replace 127.0.0.1 with your local IP
+        bookImage: book.bookImage.replace('http://127.0.0.1', 'http://172.25.208.1'), // Replace 127.0.0.1 with your local IP
       }));
       setBooks(updatedBooks);
     } catch (error) {
@@ -40,7 +40,7 @@ export default function BookPage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('http://192.168.1.37:8082/api/users/profile');
+      const response = await axios.get('http://172.25.208.1:8082/api/users/profile');
       setUsername(response.data.username);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -73,7 +73,7 @@ export default function BookPage() {
     const dueDate = format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
 
     try {
-      const response = await axios.post('http://192.168.1.37:8082/api/transactions/', {
+      const response = await axios.post('http://172.25.208.1:8082/api/transactions/', {
         user: username,
         book: selectedBook.ISBN,
         status: 'borrow',

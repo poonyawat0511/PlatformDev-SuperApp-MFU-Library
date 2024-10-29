@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { View, Text, Image, ImageBackground, StyleSheet, TextInput, Button, Alert } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import { Alert, Button, Image, ImageBackground, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -10,7 +10,7 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://192.168.1.37:8082/api/auth/login', {
+      const response = await axios.post('http://172.25.208.1:8082/api/auth/login', {
         email,
         password,
       });

@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Image, ImageBackground, ScrollView, StyleSheet, TouchableOpacity, Modal, Button, Alert } from 'react-native';
-import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native'; // Import useFocusEffect
+import axios from 'axios';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Alert, Button, Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 
 interface TimeSlot {
@@ -37,22 +37,22 @@ export default function RoomReservation() {
   const [refresh, setRefresh] = useState(false); // State to trigger data refresh
 
   const fetchTimeSlots = async () => {
-    const response = await axios.get('http://192.168.1.37:8082/api/timeslots/');
+    const response = await axios.get('http://172.25.208.1:8082/api/timeslots/');
     setTimeSlots(response.data.data);
   };
 
   const fetchRooms = async () => {
-    const response = await axios.get('http://192.168.1.37:8082/api/rooms/');
+    const response = await axios.get('http://172.25.208.1:8082/api/rooms/');
     setRooms(response.data.data);
   };
 
   const fetchRoomTimeSlots = async () => {
-    const response = await axios.get('http://192.168.1.37:8082/api/room-timeslots/');
+    const response = await axios.get('http://172.25.208.1:8082/api/room-timeslots/');
     setRoomTimeSlots(response.data.data);
   };
 
   const fetchUser = async () => {
-    const response = await axios.get('http://192.168.1.37:8082/api/users/profile');
+    const response = await axios.get('http://172.25.208.1:8082/api/users/profile');
     setUser(response.data);
   };
 
@@ -86,7 +86,7 @@ export default function RoomReservation() {
   const handleReservation = async () => {
     if (selectedSlot && user) {
       try {
-        await axios.post('http://192.168.1.37:8082/api/reservations/', {
+        await axios.post('http://172.25.208.1:8082/api/reservations/', {
           room: selectedSlot.roomId,
           user: user.username,
           type: 'pending',

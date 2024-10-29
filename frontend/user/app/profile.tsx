@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, Image, ScrollView, ActivityIndicator, ImageBackground, StyleSheet, Button, FlatList, Alert } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import axios from 'axios';
-import { useNavigation } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Button, Image, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 interface Reservation {
   id: string;
@@ -26,10 +25,10 @@ export default function Profile() {
 
   const fetchProfileAndReservations = async () => {
     try {
-      const profileResponse = await axios.get('http://192.168.1.37:8082/api/users/profile');
+      const profileResponse = await axios.get('http://172.25.208.1:8082/api/users/profile');
       setProfile(profileResponse.data);
 
-      const reservationResponse = await axios.get('http://192.168.1.37:8082/api/reservations/');
+      const reservationResponse = await axios.get('http://172.25.208.1:8082/api/reservations/');
       const userReservations = reservationResponse.data.data.filter((res: Reservation) => res.user.username === profileResponse.data.username);
       setReservations(userReservations);
       await fetchTransactions(profileResponse.data.username);
@@ -42,7 +41,7 @@ export default function Profile() {
 
   const fetchTransactions = async (username: string) => {
     try {
-      const transactionResponse = await axios.get('http://192.168.1.37:8082/api/transactions/');
+      const transactionResponse = await axios.get('http://172.25.208.1:8082/api/transactions/');
   
       // Filter transactions by username
       const userTransactions = transactionResponse.data.data.filter((transaction: any) => transaction.user.username === username);
@@ -51,7 +50,7 @@ export default function Profile() {
       const renewPromises = userTransactions.map(async (transaction: any) => {
         try {
           // Fetch renew status for each transaction
-          const renewResponse = await axios.get(`http://192.168.1.37:8082/api/renews/?transaction=${transaction.id}`);
+          const renewResponse = await axios.get(`http://172.25.208.1:8082/api/renews/?transaction=${transaction.id}`);
           
           // If renew request exists (status 200)
           if (renewResponse.data.data) {
@@ -91,7 +90,7 @@ export default function Profile() {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post('http://192.168.1.37:8082/api/auth/logout');
+      const response = await axios.post('http://172.25.208.1:8082/api/auth/logout');
       if (response.data.message === 'Logout successful') {
         Alert.alert('Success', 'You have logged out successfully.', [
           { text: 'OK', onPress: () => router.push('./login') },
@@ -105,7 +104,7 @@ export default function Profile() {
 
   const handleRenew = async (transactionId: string) => {
     try {
-      const response = await axios.post('http://192.168.1.37:8082/api/renews/', { transaction: transactionId });
+      const response = await axios.post('http://172.25.208.1:8082/api/renews/', { transaction: transactionId });
       if (response.status === 200) {
         Alert.alert('Success', 'Renew request sent successfully.');
         fetchTransactions(profile?.username || ''); // Reload transactions
