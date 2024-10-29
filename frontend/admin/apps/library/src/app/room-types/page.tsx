@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { RoomType } from "../../utils/RoomtypeTypes";
-import RoomTypeTable from "../../components/RoomTypes/RoomTable";
-import RoomtypeForm from "../../components/RoomTypes/RoomTypeForm";
+import RoomTypeTable from "../../components/RoomTypes/RoomTypeTable";
+import RoomTypeForm from "../../components/RoomTypes/RoomTypeForm";
+import ConfirmDialog from "../../components/RoomTypes/ConfirmDialog";
 
 const apiUrl = `http://localhost:8082/api/room-types`;
 
-async function fetchRoomType(): Promise<RoomType[]> {
+async function fetchRoomTypes(): Promise<RoomType[]> {
   try {
     const response = await fetch(apiUrl);
     if (!response.ok) {
-      throw new Error("Failed to fetch room-types");
+      throw new Error("Failed to fetch room types");
     }
     const result = await response.json();
     return result.data;
@@ -26,9 +27,11 @@ export default function RoomTypePage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [editingRoomType, setEditingRoomType] = useState<RoomType | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
+  const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string | null>(null); // Track room type for deletion
 
   useEffect(() => {
-    fetchRoomType().then((data) => {
+    fetchRoomTypes().then((data) => {
       setRoomTypes(data);
       setLoading(false);
     });
@@ -44,20 +47,25 @@ export default function RoomTypePage() {
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (roomTypeId: string) => {
-    if (confirm("Are you sure you want to delete this Category?")) {
+  const openConfirmDialog = (roomTypeId: string) => {
+    setSelectedRoomTypeId(roomTypeId);  
+    setIsConfirmDialogOpen(true); 
+  };
+
+  const handleDelete = async () => {
+    if (selectedRoomTypeId) {
       try {
-        const response = await fetch(`${apiUrl}/${roomTypeId}`, {
+        const response = await fetch(`${apiUrl}/${selectedRoomTypeId}`, {
           method: "DELETE",
         });
         if (!response.ok) {
-          throw new Error("Failed to delete category");
+          throw new Error("Failed to delete room type");
         }
-        setRoomTypes(
-          roomTypes.filter((roomType) => roomType.id !== roomTypeId)
-        );
+        setRoomTypes(roomTypes.filter((roomType) => roomType.id !== selectedRoomTypeId));
+        setIsConfirmDialogOpen(false);  
+        setSelectedRoomTypeId(null); 
       } catch (error) {
-        console.error("Failed to delete category:", error);
+        console.error("Failed to delete room type:", error);
       }
     }
   };
@@ -79,19 +87,17 @@ export default function RoomTypePage() {
       if (response.ok) {
         const result = await response.json();
         if (isUpdate) {
-          setRoomTypes(
-            roomTypes.map((c) => (c.id === result.data.id ? result.data : c))
-          );
+          setRoomTypes(roomTypes.map((r) => (r.id === result.data.id ? result.data : r)));
         } else {
           setRoomTypes([...roomTypes, result.data]);
         }
         setIsFormOpen(false);
       } else {
         const errorText = await response.text();
-        console.error(`Failed to submit room-type: ${errorText}`);
+        console.error(`Failed to submit room type: ${errorText}`);
       }
     } catch (error) {
-      console.error("Failed to submit room-type:", error);
+      console.error("Failed to submit room type:", error);
     }
   };
 
@@ -101,29 +107,35 @@ export default function RoomTypePage() {
 
   return (
     <div>
-      <button
-        onClick={handleCreate}
-        className="bg-blue-500 text-white px-4 py-2 rounded mb-4"
-      >
-        Create New Room-Type
-      </button>
-      <div className="flex flex-wrap justify-start">
-        {roomTypes.map((roomType) => (
-          <RoomTypeTable
-            key={roomType.id}
-            roomType={roomType}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
+        <div className="flex justify-between items-center mb-4 px-4 border-b-2">
+          <h1 className="text-3xl font-bold mb-6 text-gray-800">
+            Room Types
+          </h1>
+          <button
+            onClick={handleCreate}
+            className="bg-black text-white px-4 py-2 rounded-full shadow-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-white mb-6"
+          >
+            New Room Type
+          </button>
+        </div>
+      <RoomTypeTable
+        roomTypes={roomTypes}
+        onEdit={handleEdit}
+        onDelete={openConfirmDialog}  
+      />
       {isFormOpen && (
-        <RoomtypeForm
-          roomTyepe={editingRoomType}
+        <RoomTypeForm
+          roomType={editingRoomType}
           onSubmit={handleFormSubmit}
           onClose={() => setIsFormOpen(false)}
         />
       )}
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        message="Are you sure you want to delete this room type?"
+        onConfirm={handleDelete}  
+        onClose={() => setIsConfirmDialogOpen(false)}  
+      />
     </div>
   );
 }
