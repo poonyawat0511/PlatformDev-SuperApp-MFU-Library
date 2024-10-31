@@ -1,8 +1,20 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import axios from 'axios';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Button, Image, ImageBackground, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import axios from "axios";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Button,
+  Image,
+  ImageBackground,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 interface Reservation {
   id: string;
@@ -14,7 +26,10 @@ interface Reservation {
 }
 
 export default function Profile() {
-  const [profile, setProfile] = useState<{ username: string; email: string } | null>(null);
+  const [profile, setProfile] = useState<{
+    username: string;
+    email: string;
+  } | null>(null);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
@@ -22,18 +37,24 @@ export default function Profile() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
-
   const fetchProfileAndReservations = async () => {
     try {
-      const profileResponse = await axios.get('http://172.25.208.1:8082/api/users/profile');
+      const profileResponse = await axios.get(
+        "http://172.25.208.1:8082/api/users/profile"
+      );
       setProfile(profileResponse.data);
 
-      const reservationResponse = await axios.get('http://172.25.208.1:8082/api/reservations/');
-      const userReservations = reservationResponse.data.data.filter((res: Reservation) => res.user.username === profileResponse.data.username);
+      const reservationResponse = await axios.get(
+        "http://172.25.208.1:8082/api/reservations/"
+      );
+      const userReservations = reservationResponse.data.data.filter(
+        (res: Reservation) =>
+          res.user.username === profileResponse.data.username
+      );
       setReservations(userReservations);
       await fetchTransactions(profileResponse.data.username);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -41,42 +62,46 @@ export default function Profile() {
 
   const fetchTransactions = async (username: string) => {
     try {
-      const transactionResponse = await axios.get('http://172.25.208.1:8082/api/transactions/');
-  
+      const transactionResponse = await axios.get(
+        "http://172.25.208.1:8082/api/transactions/"
+      );
+
       // Filter transactions by username
-      const userTransactions = transactionResponse.data.data.filter((transaction: any) => transaction.user.username === username);
-  
+      const userTransactions = transactionResponse.data.data.filter(
+        (transaction: any) => transaction.user.username === username
+      );
+
       // Fetch renew status for each transaction
       const renewPromises = userTransactions.map(async (transaction: any) => {
         try {
           // Fetch renew status for each transaction
-          const renewResponse = await axios.get(`http://172.25.208.1:8082/api/renews/?transaction=${transaction.id}`);
-          
+          const renewResponse = await axios.get(
+            `http://172.25.208.1:8082/api/renews/?transaction=${transaction.id}`
+          );
+
           // If renew request exists (status 200)
           if (renewResponse.data.data) {
-            return { ...transaction, renewStatus: renewResponse.data.data.status };  // Return transaction with its renewStatus
+            return {
+              ...transaction,
+              renewStatus: renewResponse.data.data.status,
+            }; // Return transaction with its renewStatus
           }
-          return { ...transaction, renewStatus: 'none' };
-
+          return { ...transaction, renewStatus: "none" };
         } catch (error) {
           // Handle 404 error, meaning no renew request exists for this transaction
-            return { ...transaction, renewStatus: 'none' };  // No renews found, return 'none'
+          return { ...transaction, renewStatus: "none" }; // No renews found, return 'none'
         }
       });
-  
+
       // Wait for all renew status promises to resolve
       const transactionsWithRenewStatus = await Promise.all(renewPromises);
       setTransactions(transactionsWithRenewStatus);
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error("Error fetching transactions:", error);
     } finally {
       setLoadingTransactions(false);
     }
   };
-  
-
-
-
 
   useEffect(() => {
     fetchProfileAndReservations();
@@ -90,28 +115,33 @@ export default function Profile() {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post('http://172.25.208.1:8082/api/auth/logout');
-      if (response.data.message === 'Logout successful') {
-        Alert.alert('Success', 'You have logged out successfully.', [
-          { text: 'OK', onPress: () => router.push('./login') },
+      const response = await axios.post(
+        "http://172.25.208.1:8082/api/auth/logout"
+      );
+      if (response.data.message === "Logout successful") {
+        Alert.alert("Success", "You have logged out successfully.", [
+          { text: "OK", onPress: () => router.push("./login") },
         ]);
       }
     } catch (error) {
-      console.error('Error logging out:', error);
-      Alert.alert('Error', 'Logout failed. Please try again.');
+      console.error("Error logging out:", error);
+      Alert.alert("Error", "Logout failed. Please try again.");
     }
   };
 
   const handleRenew = async (transactionId: string) => {
     try {
-      const response = await axios.post('http://172.25.208.1:8082/api/renews/', { transaction: transactionId });
+      const response = await axios.post(
+        "http://172.25.208.1:8082/api/renews/",
+        { transaction: transactionId }
+      );
       if (response.status === 200) {
-        Alert.alert('Success', 'Renew request sent successfully.');
-        fetchTransactions(profile?.username || ''); // Reload transactions
+        Alert.alert("Success", "Renew request sent successfully.");
+        fetchTransactions(profile?.username || ""); // Reload transactions
       }
     } catch (error) {
-      console.error('Error sending renew request:', error);
-      Alert.alert('Error', 'Failed to send renew request.');
+      console.error("Error sending renew request:", error);
+      Alert.alert("Error", "Failed to send renew request.");
     }
   };
 
@@ -121,46 +151,94 @@ export default function Profile() {
 
   return (
     <ImageBackground
-      source={require('../assets/images/LibraryMFUBG.png')}
-      imageStyle={{ opacity: 0.5 }}
+      imageStyle={{  backgroundColor: "#F7F9F2" }}
       style={styles.background}
     >
       <ScrollView>
         <View style={styles.container}>
-          <View style={{ alignItems: 'center', marginBottom: 10, marginTop: 20 }}>
-            <Image source={require('../assets/images/LibraryMFUprofile.png')} />
+          <View
+            style={{ alignItems: "center", marginBottom: 10, marginTop: 20 }}
+          >
+            <Image source={require("../assets/images/LibraryMFUprofile.png")} />
           </View>
 
-          <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.username}</Text>
-            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>{profile?.email}</Text>
+          <View
+            style={{
+              alignItems: "flex-start",
+              paddingBottom: 5,
+              borderBottomWidth: 2,
+              borderBottomColor: "gray",
+              margin: 10,
+            }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+              Student ID: {profile?.username}
+            </Text>
+            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+              Email: {profile?.email}
+            </Text>
           </View>
-          <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Your Room Reservation</Text>
 
-          {reservations.map((item) => (
-            <View key={item.id} style={styles.reservationCard}>
-              <Text>Room: {item.room.room}</Text>
-              <Text>Time: {item.timeSlot.start} - {item.timeSlot.end}</Text>
-              <Text>Type: {item.type}</Text>
-            </View>
-          ))}
+          <View
+            style={{
+              alignItems: "center",
+              padding: 20,
+              backgroundColor: "#FFF1C1",
+              borderRadius: 15,
+              margin: 10,
+            }}
+          >
+            <Text style={{ fontSize: 25, fontWeight: "bold" }}>
+              Your Room Reservation
+            </Text>
+            {reservations.map((item) => (
+              <View key={item.id} style={styles.reservationCard}>
+                <Text>Room: {item.room.room}</Text>
+                <Text>
+                  Time: {item.timeSlot.start} - {item.timeSlot.end}
+                </Text>
+                <Text>Type: {item.type}</Text>
+              </View>
+            ))}
+          </View>
 
-          {transactions.length > 0 && (
-            <>
-              <Text style={{ fontSize: 18, fontWeight: 'bold', marginTop: 20 }}>Borrowed Books</Text>
-              {transactions.map((item) => (
-                <View key={item.id} style={styles.transactionCard}>
-                  <Text>Book: {item.book.name.en}</Text>
-                  <Text>Borrow Date: {new Date(item.borrowDate).toLocaleDateString()}</Text>
-                  <Text>Due Date: {new Date(item.dueDate).toLocaleDateString()}</Text>
-                </View>
-              ))}
-            </>
-          )}
-
+          <View
+            style={{
+              alignItems: "center",
+              padding: 20,
+              backgroundColor: "#FFF1C1",
+              borderRadius: 15,
+              margin: 10,
+            }}
+          >
+            {transactions.length > 0 && (
+              <>
+                <Text style={{ fontSize: 25, fontWeight: "bold" }}>
+                  Borrowed Books
+                </Text>
+                {transactions.map((item) => (
+                  <View key={item.id} style={styles.transactionCard}>
+                    <Text>Book: {item.book.name.en}</Text>
+                    <Text>
+                      Borrow Date:{" "}
+                      {new Date(item.borrowDate).toLocaleDateString()}
+                    </Text>
+                    <Text>
+                      Due Date: {new Date(item.dueDate).toLocaleDateString()}
+                    </Text>
+                  </View>
+                ))}
+              </>
+            )}
+          </View>
 
           <View style={styles.logoutButton}>
-            <Button title="Logout" color="#E64646" onPress={handleLogout} />
+            <TouchableOpacity
+              onPress={handleLogout}
+              style={{ alignItems: "center" }}
+            >
+              <AntDesign name="logout" size={40} color="black" />
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -171,38 +249,37 @@ export default function Profile() {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    resizeMode: 'cover',
   },
   container: {
     flex: 1,
     padding: 20,
-    justifyContent: 'flex-start',
+    justifyContent: "center",
   },
   reservationCard: {
     padding: 10,
     margin: 10,
-    backgroundColor: '#fff',
-    borderRadius: 5,
+    backgroundColor: "#fff",
+    borderRadius: 10,
     width: 300,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   logoutButton: {
     marginTop: 20,
   },
   emptyList: {
     flexGrow: 0.3,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   transactionCard: {
     padding: 10,
     margin: 10,
-    backgroundColor: '#fff',
-    borderRadius: 5,
+    backgroundColor: "#fff",
+    borderRadius: 10,
     width: 300,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   bookImage: {
     width: 100,

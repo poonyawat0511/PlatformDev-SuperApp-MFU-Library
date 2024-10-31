@@ -1,15 +1,26 @@
-import { useFocusEffect } from '@react-navigation/native';
-import axios from 'axios';
-import { format } from 'date-fns'; // You can use this library to handle dates easily
-import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Button, FlatList, Image, ImageBackground, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import PagerView from 'react-native-pager-view';
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useFocusEffect } from "@react-navigation/native";
+import axios from "axios";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  ImageBackground,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 interface Book {
   id: string;
   name: { th: string; en: string };
   description: { th: string; en: string };
   bookImage: string;
+  category: { id: string; name: { th: string; en: string } };
   status: string;
   quantity: number;
   ISBN: string;
@@ -20,19 +31,22 @@ export default function BookPage() {
   const [loading, setLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [username, setUsername] = useState<string | null>(null); // Store the username
+  const [username, setUsername] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState("");
 
-  // Fetch books from the API
   const fetchBooks = async () => {
     try {
-      const response = await axios.get('http://172.25.208.1:8082/api/books/');
+      const response = await axios.get("http://172.25.208.1:8082/api/books/");
       const updatedBooks = response.data.data.map((book: Book) => ({
         ...book,
-        bookImage: book.bookImage.replace('http://127.0.0.1', 'http://172.25.208.1'), // Replace 127.0.0.1 with your local IP
+        bookImage: book.bookImage.replace(
+          "http://127.0.0.1",
+          "http://172.25.208.1"
+        ),
       }));
       setBooks(updatedBooks);
     } catch (error) {
-      console.error('Error fetching books:', error);
+      console.error("Error fetching books:", error);
     } finally {
       setLoading(false);
     }
@@ -40,17 +54,19 @@ export default function BookPage() {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('http://172.25.208.1:8082/api/users/profile');
+      const response = await axios.get(
+        "http://172.25.208.1:8082/api/users/profile"
+      );
       setUsername(response.data.username);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
     }
   };
 
   useFocusEffect(
     useCallback(() => {
       fetchBooks();
-      fetchProfile(); 
+      fetchProfile();
     }, [])
   );
 
@@ -64,97 +80,100 @@ export default function BookPage() {
     setSelectedBook(null);
   };
 
-  const borrowBook = async () => {
-    if (!username || !selectedBook) {
-      return;
-    }
-
-    const today = format(new Date(), 'yyyy-MM-dd');
-    const dueDate = format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd');
-
-    try {
-      const response = await axios.post('http://172.25.208.1:8082/api/transactions/', {
-        user: username,
-        book: selectedBook.ISBN,
-        status: 'borrow',
-        borrowDate: today,
-        dueDate: dueDate,
-      });
-
-      if (response.data) {
-        Alert.alert('Success', 'Book borrowed successfully!');
-        closeModal(); // Close modal after borrowing
-      }
-    } catch (error) {
-      console.error('Error borrowing book:', error);
-      Alert.alert('Error', 'Failed to borrow the book.');
-    }
-  };
-
-  // Pagination logic (6 items per page)
-  const renderPage = (data: Book[]) => (
-    <FlatList
-      data={data}
-      keyExtractor={(item) => item.id}
-      numColumns={2}
-      renderItem={({ item }) => (
-        <TouchableOpacity style={styles.card} onPress={() => openModal(item)}>
-          <Image source={{ uri: item.bookImage }} style={styles.bookImage} />
-          <Text style={styles.bookName}>{item.name.en}</Text>
-        </TouchableOpacity>
-      )}
-    />
+  const filteredBooks = books.filter((book) =>
+    book.name.en.toLowerCase().includes(searchText.toLowerCase())
   );
 
   if (loading) {
     return <ActivityIndicator size="large" />;
   }
 
-  // Split books into chunks of 6 per page
-  const chunkedBooks = books.reduce((resultArray: Book[][], item, index) => { 
-    const chunkIndex = Math.floor(index / 6);
-    if (!resultArray[chunkIndex]) {
-      resultArray[chunkIndex] = []; // Start a new chunk
-    }
-    resultArray[chunkIndex].push(item);
-    return resultArray;
-  }, []);
-
   return (
     <ImageBackground
-      source={require('../assets/images/LibraryMFUBG.png')}
-      imageStyle={{ opacity: 0.5 }}
+      imageStyle={{ backgroundColor: "#F7F9F2" }}
       style={styles.background}
     >
+      <View
+        style={{
+          alignItems: "flex-start",
+          marginLeft: 10,
+          marginRight: 10,
+          borderBottomColor: "gray",
+          paddingBottom: 4,
+          borderBottomWidth: 2,
+        }}
+      >
+        <Text style={{ fontSize: 25, fontWeight: "bold", paddingTop: 10 }}>
+          All Books
+        </Text>
+      </View>
       <View style={styles.container}>
-        <PagerView style={styles.pager} initialPage={0}>
-          {chunkedBooks.map((page, index) => (
-            <View key={index} style={styles.page}>
-              {renderPage(page)}
-            </View>
-          ))}
-        </PagerView>
-
-        {/* Modal for book details */}
-        <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search books..."
+          value={searchText}
+          onChangeText={setSearchText}
+        />
+        <FlatList
+          data={filteredBooks}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => openModal(item)}
+            >
+              <Image
+                source={{ uri: item.bookImage }}
+                style={styles.bookImage}
+              />
+              <Text style={styles.bookName}>{item.name.en}</Text>
+              <Text
+                style={[
+                  styles.bookStatus,
+                  { color: item.status === "ready" ? "green" : "red" },
+                ]}
+              >
+                Status: {item.status}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+        <Modal
+          visible={isModalVisible}
+          animationType="slide"
+          transparent={true}
+        >
           <View style={styles.modalContainer}>
             <View style={styles.modal}>
-              <ScrollView contentContainerStyle={styles.modalContent}>
-                {selectedBook && (
-                  <>
-                    <Image source={{ uri: selectedBook.bookImage }} style={styles.modalImage} />
-                    <Text style={styles.modalTitle}>{selectedBook.name.en}</Text>
-                    <Text style={styles.modalDescription}>{selectedBook.description.en}</Text>
-                    <Text style={styles.modalDetails}>Status: {selectedBook.status}</Text>
-                    <Text style={styles.modalDetails}>Quantity: {selectedBook.quantity}</Text>
-                    <Text style={styles.modalDetails}>ISBN: {selectedBook.ISBN}</Text>
-                    <Text style={styles.modalDetails}> </Text>
-                    <Button title="Borrow this book" onPress={borrowBook} />
-                    <Text style={styles.modalDetails}> </Text>
-                    <Button title="Close" onPress={closeModal} />
-                  </>
-                )}
-              </ScrollView>
+              {selectedBook && (
+                <View style={styles.modalContent}>
+                  <Image
+                    source={{ uri: selectedBook.bookImage }}
+                    style={styles.modalImage}
+                  />
+                  <Text style={styles.modalTitle}>{selectedBook.name.en}</Text>
+                  <Text style={styles.modalDescription}>
+                    Description: {selectedBook.description.en}
+                  </Text>
+                  <Text style={styles.modalDetails}>
+                    Quantity: {selectedBook.quantity}
+                  </Text>
+                  <Text style={styles.modalDetails}>
+                    ISBN: {selectedBook.ISBN}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={closeModal}
+                  >
+                    <Ionicons
+                      name="arrow-back-circle"
+                      size={40}
+                      color="black"
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </View>
         </Modal>
@@ -164,24 +183,77 @@ export default function BookPage() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 20 },
-  pager: { flex: 1 },
-  page: { padding: 10, flex: 1 },
-  card: { flex: 1, margin: 10, backgroundColor: '#e7e7e7', borderRadius: 10, padding: 10 },
-  bookImage: { width: 100, height: 150, resizeMode: 'contain' },
-  bookName: { textAlign: 'center', marginTop: 10 },
-  modalContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0, 0, 0, 0.5)' },
-  modal: { width: 300, padding: 20, backgroundColor: 'white', borderRadius: 10 },
-  modalImage: { width: 200, height: 300, marginBottom: 20 },
-  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 10 },
-  modalDescription: { fontSize: 16, marginBottom: 10 },
-  modalDetails: { fontSize: 14, marginBottom: 5 },
-  background: { flex: 1, resizeMode: 'cover' },
-  modalContent: {
-    backgroundColor: '#e7e7e7',
-    padding: 20,
-    borderRadius: 10,
-    alignItems: 'center',
+  container: { flex: 3, paddingTop: 10 },
+  searchBar: {
+    height: 40,
+    borderColor: "gray",
+    borderWidth: 1,
+    margin: 10,
+    paddingLeft: 8,
+    borderRadius: 20,
   },
-  
+  card: {
+    flex: 5,
+    margin: 10,
+    borderRadius: 15,
+    height: 350,
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  bookImage: {
+    width: "100%",
+    height: "80%",
+    resizeMode: "cover",
+    borderRadius: 15,
+  },
+  bookName: { marginTop: 10, fontSize: 20, fontWeight: "bold" },
+  bookStatus: { color: "#9400FF", fontSize: 15, fontWeight: "bold" },
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  modal: {
+    flex: 0,
+    width: "60%",
+    padding: 20,
+    backgroundColor: "white",
+    borderRadius: 10,
+    alignItems: "flex-start",
+    justifyContent: "flex-start",
+  },
+  modalImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 10,
+    marginBottom: 20,
+    resizeMode: "contain",
+  },
+  modalContent: {
+    width: "100%",
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 10,
+    paddingBottom: 5,
+    borderBottomWidth: 2,
+    borderBottomColor: "gray",
+  },
+  modalDescription: {
+    fontSize: 17,
+    marginBottom: 5,
+  },
+  modalDetails: {
+    fontSize: 17,
+    marginBottom: 5,
+  },
+  background: { flex: 1 },
+  closeButton: {
+    marginTop: 17,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: "center",
+  },
 });
