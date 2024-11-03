@@ -36,12 +36,12 @@ export default function BookPage() {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get("http://172.25.208.1:8082/api/books/");
+      const response = await axios.get("http://192.168.1.198:8082/api/books/");
       const updatedBooks = response.data.data.map((book: Book) => ({
         ...book,
         bookImage: book.bookImage.replace(
           "http://127.0.0.1",
-          "http://172.25.208.1"
+          "http://192.168.1.198"
         ),
       }));
       setBooks(updatedBooks);
@@ -55,7 +55,7 @@ export default function BookPage() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        "http://172.25.208.1:8082/api/users/profile"
+        "http://192.168.1.198:8082/api/users/profile"
       );
       setUsername(response.data.username);
     } catch (error) {
@@ -90,7 +90,7 @@ export default function BookPage() {
 
   return (
     <ImageBackground
-      imageStyle={{ backgroundColor: "#F7F9F2" }}
+      imageStyle={{ backgroundColor: "#FFFFFF" }}
       style={styles.background}
     >
       <View

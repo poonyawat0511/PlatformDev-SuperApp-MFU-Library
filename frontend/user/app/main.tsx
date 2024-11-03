@@ -13,11 +13,11 @@ export default function Main() {
     <Tab.Navigator
       initialRouteName="Book"
       screenOptions={{
-        tabBarActiveTintColor: "#000000",
-        tabBarInactiveTintColor: "#181C14",
+        tabBarActiveTintColor: "#FBFBFB",
+        tabBarInactiveTintColor: "#FBFBFB",
         tabBarLabelStyle: { fontSize: 12 },
         tabBarStyle: {
-          backgroundColor: "#FFECC8",
+          backgroundColor: "#BD1616",
         },
         swipeEnabled: false,
         tabBarIndicatorStyle: {
@@ -42,7 +42,7 @@ export default function Main() {
         options={{
           tabBarLabel: "Room",
           tabBarIcon: ({ color }) => (
-            <FontAwesome name="table" size={24} color="black" />
+            <FontAwesome name="table" size={24} color={color} />
           ),
         }}
       />
@@ -52,7 +52,7 @@ export default function Main() {
         options={{
           tabBarLabel: "Profile",
           tabBarIcon: ({ color }) => (
-            <FontAwesome5 name="user-graduate" size={24} color="black" />
+            <FontAwesome5 name="user-graduate" size={24} color={color} />
           ),
         }}
       />

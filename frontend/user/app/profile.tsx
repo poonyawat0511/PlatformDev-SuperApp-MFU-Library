@@ -1,3 +1,4 @@
+import AntDesign from "@expo/vector-icons/AntDesign";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import { useRouter } from "expo-router";
@@ -5,7 +6,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Button,
   Image,
   ImageBackground,
   ScrollView,
@@ -14,7 +14,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import AntDesign from "@expo/vector-icons/AntDesign";
 
 interface Reservation {
   id: string;
@@ -40,12 +39,12 @@ export default function Profile() {
   const fetchProfileAndReservations = async () => {
     try {
       const profileResponse = await axios.get(
-        "http://172.25.208.1:8082/api/users/profile"
+        "http://192.168.1.198:8082/api/users/profile"
       );
       setProfile(profileResponse.data);
 
       const reservationResponse = await axios.get(
-        "http://172.25.208.1:8082/api/reservations/"
+        "http://192.168.1.198:8082/api/reservations/"
       );
       const userReservations = reservationResponse.data.data.filter(
         (res: Reservation) =>
@@ -63,7 +62,7 @@ export default function Profile() {
   const fetchTransactions = async (username: string) => {
     try {
       const transactionResponse = await axios.get(
-        "http://172.25.208.1:8082/api/transactions/"
+        "http://192.168.1.198:8082/api/transactions/"
       );
 
       // Filter transactions by username
@@ -76,7 +75,7 @@ export default function Profile() {
         try {
           // Fetch renew status for each transaction
           const renewResponse = await axios.get(
-            `http://172.25.208.1:8082/api/renews/?transaction=${transaction.id}`
+            `http://192.168.1.198:8082/api/renews/?transaction=${transaction.id}`
           );
 
           // If renew request exists (status 200)
@@ -116,7 +115,7 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "http://172.25.208.1:8082/api/auth/logout"
+        "http://192.168.1.198:8082/api/auth/logout"
       );
       if (response.data.message === "Logout successful") {
         Alert.alert("Success", "You have logged out successfully.", [
@@ -132,7 +131,7 @@ export default function Profile() {
   const handleRenew = async (transactionId: string) => {
     try {
       const response = await axios.post(
-        "http://172.25.208.1:8082/api/renews/",
+        "http://192.168.1.198:8082/api/renews/",
         { transaction: transactionId }
       );
       if (response.status === 200) {
@@ -151,7 +150,7 @@ export default function Profile() {
 
   return (
     <ImageBackground
-      imageStyle={{  backgroundColor: "#F7F9F2" }}
+      imageStyle={{ backgroundColor: "#FFFFFF" }}
       style={styles.background}
     >
       <ScrollView>
@@ -183,12 +182,21 @@ export default function Profile() {
             style={{
               alignItems: "center",
               padding: 20,
-              backgroundColor: "#FFF1C1",
+              backgroundColor: "#BD1616",
               borderRadius: 15,
               margin: 10,
             }}
           >
-            <Text style={{ fontSize: 25, fontWeight: "bold" }}>
+            <Text
+              style={{
+                fontSize: 25,
+                fontWeight: "bold",
+                color: "#FFFFFF",
+                borderBottomColor: "#FFFFFF",
+                paddingBottom: 4,
+                borderBottomWidth: 2,
+              }}
+            >
               Your Room Reservation
             </Text>
             {reservations.map((item) => (
@@ -206,14 +214,23 @@ export default function Profile() {
             style={{
               alignItems: "center",
               padding: 20,
-              backgroundColor: "#FFF1C1",
+              backgroundColor: "#BD1616",
               borderRadius: 15,
               margin: 10,
             }}
           >
             {transactions.length > 0 && (
               <>
-                <Text style={{ fontSize: 25, fontWeight: "bold" }}>
+                <Text
+                  style={{
+                    fontSize: 25,
+                    fontWeight: "bold",
+                    color: "#FFFFFF",
+                    borderBottomColor: "#FFFFFF",
+                    paddingBottom: 4,
+                    borderBottomWidth: 2,
+                  }}
+                >
                   Borrowed Books
                 </Text>
                 {transactions.map((item) => (
