@@ -39,12 +39,12 @@ export default function Profile() {
   const fetchProfileAndReservations = async () => {
     try {
       const profileResponse = await axios.get(
-        "http://192.168.1.198:8082/api/users/profile"
+        "http://172.27.72.20:8082/api/users/profile"
       );
       setProfile(profileResponse.data);
 
       const reservationResponse = await axios.get(
-        "http://192.168.1.198:8082/api/reservations/"
+        "http://172.27.72.20:8082/api/reservations/"
       );
       const userReservations = reservationResponse.data.data.filter(
         (res: Reservation) =>
@@ -62,7 +62,7 @@ export default function Profile() {
   const fetchTransactions = async (username: string) => {
     try {
       const transactionResponse = await axios.get(
-        "http://192.168.1.198:8082/api/transactions/"
+        "http://172.27.72.20:8082/api/transactions/"
       );
 
       // Filter transactions by username
@@ -75,7 +75,7 @@ export default function Profile() {
         try {
           // Fetch renew status for each transaction
           const renewResponse = await axios.get(
-            `http://192.168.1.198:8082/api/renews/?transaction=${transaction.id}`
+            `http://172.27.72.20:8082/api/renews/?transaction=${transaction.id}`
           );
 
           // If renew request exists (status 200)
@@ -115,7 +115,7 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "http://192.168.1.198:8082/api/auth/logout"
+        "http://172.27.72.20:8082/api/auth/logout"
       );
       if (response.data.message === "Logout successful") {
         Alert.alert("Success", "You have logged out successfully.", [
@@ -131,7 +131,7 @@ export default function Profile() {
   const handleRenew = async (transactionId: string) => {
     try {
       const response = await axios.post(
-        "http://192.168.1.198:8082/api/renews/",
+        "http://172.27.72.20:8082/api/renews/",
         { transaction: transactionId }
       );
       if (response.status === 200) {
@@ -201,11 +201,29 @@ export default function Profile() {
             </Text>
             {reservations.map((item) => (
               <View key={item.id} style={styles.reservationCard}>
-                <Text>Room: {item.room.room}</Text>
                 <Text>
-                  Time: {item.timeSlot.start} - {item.timeSlot.end}
+                  <Text style={{ fontWeight: "bold" }}>
+                    Room: {item.room.room}
+                  </Text>
                 </Text>
-                <Text>Type: {item.type}</Text>
+                <Text style={{ justifyContent: "space-between" }}>
+                  <Text>
+                    Time: {item.timeSlot.start} - {item.timeSlot.end}
+                  </Text>
+                  <Text
+                    style={{
+                      color:
+                        item.type === "confirmed"
+                          ? "green"
+                          : item.type === "pending"
+                          ? "yellow"
+                          : "red",
+                    }}
+                  >
+                    {" "}
+                    : {item.type}
+                  </Text>
+                </Text>
               </View>
             ))}
           </View>
@@ -235,13 +253,15 @@ export default function Profile() {
                 </Text>
                 {transactions.map((item) => (
                   <View key={item.id} style={styles.transactionCard}>
-                    <Text>Book: {item.book.name.en}</Text>
+                    <Text style={{ fontWeight: "bold" }}>
+                      Book: {item.book.name.en}
+                    </Text>
                     <Text>
                       Borrow Date:{" "}
                       {new Date(item.borrowDate).toLocaleDateString()}
                     </Text>
                     <Text>
-                      Due Date: {new Date(item.dueDate).toLocaleDateString()}
+                      Date: {new Date(item.dueDate).toLocaleDateString()}
                     </Text>
                   </View>
                 ))}
@@ -278,8 +298,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     width: 300,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: "flex-start",
   },
   logoutButton: {
     marginTop: 20,
@@ -295,7 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 10,
     width: 300,
-    alignItems: "center",
+    alignItems: "flex-start",
     justifyContent: "center",
   },
   bookImage: {

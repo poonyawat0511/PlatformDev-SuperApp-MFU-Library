@@ -51,25 +51,25 @@ export default function RoomReservation() {
   const [refresh, setRefresh] = useState(false);
 
   const fetchTimeSlots = async () => {
-    const response = await axios.get("http://192.168.1.198:8082/api/timeslots/");
+    const response = await axios.get("http://172.27.72.20:8082/api/timeslots/");
     setTimeSlots(response.data.data);
   };
 
   const fetchRooms = async () => {
-    const response = await axios.get("http://192.168.1.198:8082/api/rooms/");
+    const response = await axios.get("http://172.27.72.20:8082/api/rooms/");
     setRooms(response.data.data);
   };
 
   const fetchRoomTimeSlots = async () => {
     const response = await axios.get(
-      "http://192.168.1.198:8082/api/room-timeslots/"
+      "http://172.27.72.20:8082/api/room-timeslots/"
     );
     setRoomTimeSlots(response.data.data);
   };
 
   const fetchUser = async () => {
     const response = await axios.get(
-      "http://192.168.1.198:8082/api/users/profile"
+      "http://172.27.72.20:8082/api/users/profile"
     );
     setUser(response.data);
   };
@@ -104,7 +104,7 @@ export default function RoomReservation() {
   const handleReservation = async () => {
     if (selectedSlot && user) {
       try {
-        await axios.post("http://192.168.1.198:8082/api/reservations/", {
+        await axios.post("http://172.27.72.20:8082/api/reservations/", {
           room: selectedSlot.roomId,
           user: user.username,
           type: "pending",

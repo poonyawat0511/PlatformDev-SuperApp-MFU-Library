@@ -36,12 +36,12 @@ export default function BookPage() {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get("http://192.168.1.198:8082/api/books/");
+      const response = await axios.get("http://172.27.72.20:8082/api/books/");
       const updatedBooks = response.data.data.map((book: Book) => ({
         ...book,
         bookImage: book.bookImage.replace(
           "http://127.0.0.1",
-          "http://192.168.1.198"
+          "http://172.27.72.20"
         ),
       }));
       setBooks(updatedBooks);
@@ -55,7 +55,7 @@ export default function BookPage() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        "http://192.168.1.198:8082/api/users/profile"
+        "http://172.27.72.20:8082/api/users/profile"
       );
       setUsername(response.data.username);
     } catch (error) {
@@ -128,13 +128,17 @@ export default function BookPage() {
                 style={styles.bookImage}
               />
               <Text style={styles.bookName}>{item.name.en}</Text>
-              <Text
-                style={[
-                  styles.bookStatus,
-                  { color: item.status === "ready" ? "green" : "red" },
-                ]}
-              >
-                Status: {item.status}
+
+              <Text>
+                Status:
+                <Text
+                  style={[
+                    styles.bookStatus,
+                    { color: item.status === "ready" ? "green" : "red" },
+                  ]}
+                >
+                  {item.status}
+                </Text>
               </Text>
             </TouchableOpacity>
           )}
@@ -206,7 +210,13 @@ const styles = StyleSheet.create({
     resizeMode: "cover",
     borderRadius: 15,
   },
-  bookName: { marginTop: 10, fontSize: 20, fontWeight: "bold" },
+  bookName: {
+    marginTop: 10,
+    fontSize: 15,
+    fontWeight: "bold",
+    borderBottomWidth: 1,
+    borderBottomColor: "gray",
+  },
   bookStatus: { color: "#9400FF", fontSize: 15, fontWeight: "bold" },
   modalContainer: {
     flex: 1,

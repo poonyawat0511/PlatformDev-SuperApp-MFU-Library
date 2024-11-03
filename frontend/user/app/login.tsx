@@ -21,7 +21,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        "http://192.168.1.198:8082/api/auth/login",
+        "http://172.27.72.20:8082/api/auth/login",
         {
           email,
           password,
