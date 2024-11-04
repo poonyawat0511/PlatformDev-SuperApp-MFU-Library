@@ -211,20 +211,74 @@ export default function ReservationPage() {
     // ตรวจสอบค่า room และ user ว่ามีข้อมูลก่อนจะเข้าถึง field `roomName` และ `username`
     const username = reservation.user?.username?.toLowerCase() || "";
     const query = searchQuery.toLowerCase();
-  
+
     // การกรองตามคำค้นหา
     const matchesSearch = username.includes(query);
-  
+
     // การกรองตามประเภท
-    const matchesType =
-      typeFilter === "all" || reservation.type === typeFilter;
-  
+    const matchesType = typeFilter === "all" || reservation.type === typeFilter;
+
     return matchesSearch && matchesType;
   });
-  
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setTypeFilter(e.target.value);
+  };
+
+  const handleUpdateType = async (reservationId: string, type: string) => {
+    try {
+      // Find the renew by its ID in the current state to get the transactionId
+      const reservationToUpdate = reservations.find(
+        (reservation) => reservation.id === reservationId
+      );
+      if (!reservationToUpdate) {
+        throw new Error("Reservation not found");
+      }
+
+      // Send both status and transactionId in the request body
+      const response = await fetch(`${apiUrl}/${reservationId}`, {
+        // Ensure this is correct
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update type");
+      }
+
+      const result = await response.json();
+
+      // Update the renews state
+      setReservations(
+        reservations.map((reservation) =>
+          reservation.id === reservationId
+            ? { ...reservation, type: result.data.type }
+            : reservation
+        )
+      );
+
+      // Add success alert
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        `Reservation ${type} successfully`,
+        tAlertType.SUCCESS
+      );
+    } catch (error) {
+      console.error(error);
+      // Add error alert
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Error",
+        "Failed to update type",
+        tAlertType.ERROR
+      );
+    }
   };
 
   if (loading) {
@@ -301,6 +355,7 @@ export default function ReservationPage() {
               reservations={filteredReservations}
               onEdit={handleEdit}
               onDelete={confirmDelete}
+              onUpdateType={handleUpdateType}
             />
           </div>
         ) : (
