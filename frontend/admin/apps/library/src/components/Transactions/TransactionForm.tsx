@@ -168,7 +168,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         <input
           type="text"
           name="username"
-          value={formData.user.username}
+          value={formData.user?.username}
           onChange={handleChange}
           placeholder="Enter username"
           required
