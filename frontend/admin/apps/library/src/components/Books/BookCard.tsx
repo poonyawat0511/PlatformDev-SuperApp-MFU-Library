@@ -1,6 +1,6 @@
 import { Book } from "@/utils/BookTypes";
-import { LiaPenFancySolid } from "react-icons/lia";
 import { BsTrashFill } from "react-icons/bs";
+import { LiaPenFancySolid } from "react-icons/lia";
 
 interface BookCardProps {
   book: Book;
@@ -35,7 +35,7 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
             <div className="font-bold text-lg mb-1 border-b-2 border-white text-white">
               {book.name.en}
             </div>
-            <p className="text-gray-700 text-sm text-white">{book.description.en}</p>
+            <p className="text-gray-700 text-sm text-white">{book.description.en||"-"}</p>
           </div>
           <div className="px-4 pt-2 pb-2">
             <div className="flex items-center mb-1">
@@ -65,7 +65,7 @@ export default function BookCard({ book, onEdit, onDelete }: BookCardProps) {
             <div className="flex items-center">
               <span className="font-semibold mr-2 text-white">ISBN:</span>
               <span className="inline-block rounded-full px-2 py-1 text-xs font-semibold text-white">
-                {book.ISBN}
+                {book.ISBN||"-"}
               </span>
             </div>
           </div>

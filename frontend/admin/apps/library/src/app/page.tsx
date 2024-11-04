@@ -207,7 +207,7 @@ export default function Home() {
           <tbody>
             {recentReservations.map((reservation, index) => (
               <tr key={index}>
-                <td className="border px-4 py-2">{reservation.room.room}</td>
+                <td className="border px-4 py-2">{reservation.room?.room||"-"}</td>
                 <td className="border px-4 py-2">{new Date(reservation.dateTime).toLocaleString()}</td>
                 <td className="border px-4 py-2">{reservation.type}</td>
               </tr>
@@ -239,9 +239,9 @@ export default function Home() {
           <tbody>
             {recentTransactions.map((transaction, index) => (
               <tr key={index}>
-                <td className="border px-4 py-2">{transaction.user.username}</td>
-                <td className="border px-4 py-2">{transaction.book.name.en}</td>
-                <td className="border px-4 py-2">{transaction.status}</td>
+                <td className="border px-4 py-2">{transaction.user?.username||"-"}</td>
+                <td className="border px-4 py-2">{transaction.book.name.en||"-"}</td>
+                <td className="border px-4 py-2">{transaction.status||"-"}</td>
                 <td className="border px-4 py-2">{new Date(transaction.borrowDate).toLocaleDateString()}</td>
                 <td className="border px-4 py-2">{transaction.returnDate ? new Date(transaction.returnDate).toLocaleDateString() : '-'}</td>
               </tr>

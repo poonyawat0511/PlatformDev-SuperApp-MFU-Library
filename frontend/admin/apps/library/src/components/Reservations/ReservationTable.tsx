@@ -32,7 +32,7 @@ export default function ReservationTable({
           {reservations.map((reservation) => {
             return (
               <tr key={reservation.id} className="border-b hover:bg-gray-50">
-                <td className="px-6 py-4 text-center">{reservation.room.room}</td>
+                <td className="px-6 py-4 text-center">{reservation.room?.room|| "-"}</td>
                 <td className="px-6 py-4 text-center">{reservation.user?.username}</td>
                 <td className="px-6 py-4 capitalize text-center">{reservation.type || "-"}</td>
                 <td className="px-6 py-4 capitalize text-center">{reservation.timeSlot?.start || "-"}</td>

@@ -40,10 +40,10 @@ export default function RoomTable({
                   {room.status || "-"}
                 </td>
                 <td className="px-6 py-4 capitalize text-center">
-                  {room.type.name?.en|| "-"}
+                  {room.type?.name?.en|| "-"}
                 </td>
                 <td className="px-6 py-4 capitalize text-center">
-                  {room.type.name?.th|| "-"}
+                  {room.type?.name?.th|| "-"}
                 </td>
                 <td className="px-6 py-4 flex space-x-2 text-center justify-center">
                   <button

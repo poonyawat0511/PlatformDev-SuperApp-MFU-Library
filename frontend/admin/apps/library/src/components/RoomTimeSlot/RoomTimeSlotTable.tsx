@@ -19,7 +19,7 @@ export default function RoomTimeSlotTable({
 }: RoomTimeSlotTableProps) {
   // Group roomTimeSlots by room for easy access
   const roomTimeSlotMap = roomTimeSlots.reduce((acc, slot) => {
-    const roomId = slot.room.id;
+    const roomId = slot.room?.id;
     if (!acc[roomId]) {
       acc[roomId] = [];
     }
