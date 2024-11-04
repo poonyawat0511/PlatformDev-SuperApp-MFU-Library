@@ -1,5 +1,4 @@
 import { Renew } from "@/utils/RenewType";
-import { BsTrashFill } from "react-icons/bs";
 import { FaTimes } from "react-icons/fa";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 
@@ -15,7 +14,7 @@ export default function RenewTable({
   onDelete,
 }: RenewTableProps) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto w-full">
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
           <tr>

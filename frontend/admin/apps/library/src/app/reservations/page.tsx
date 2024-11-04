@@ -15,7 +15,7 @@ import { useEffect, useState } from "react";
 const apiUrl = `http://localhost:8082/api/reservations`;
 const apiRoomUrl = `http://localhost:8082/api/rooms`;
 const apiUserUrl = `http://localhost:8082/api/users`;
-const apiTimeSlotUrl = `http://localhost:8082/api/timeslots`
+const apiTimeSlotUrl = `http://localhost:8082/api/timeslots`;
 
 async function fetchReservation(): Promise<Reservation[]> {
   try {
@@ -76,8 +76,9 @@ async function fetchTimeslots(): Promise<Timeslot[]> {
 export default function ReservationPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [users, setUsers] = useState<User[]>([]);
-  const [timeSlots,setTimeSlots] = useState<Timeslot[]>([])
+  const [timeSlots, setTimeSlots] = useState<Timeslot[]>([]);
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -114,6 +115,7 @@ export default function ReservationPage() {
       setRooms(fetchedRooms);
       setUsers(fetchedUsers);
       setTimeSlots(fetchTimeSlots);
+      setLoading(false);
     };
 
     fetchData();
@@ -200,6 +202,10 @@ export default function ReservationPage() {
       console.log(error);
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
   return (
     <div className="min-h-screen p-6">
       <div className="container mx-auto">
@@ -214,19 +220,19 @@ export default function ReservationPage() {
         </div>
 
         {isFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
-            <ReservationForm
-              reservation={selectedReservation}
-              onSubmit={handleFormSubmit}
-              onClose={() => setIsFormOpen(false)}
-              rooms={rooms}
-              users={users}
-              timeSlot={timeSlots}
-            />
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg">
+              <ReservationForm
+                reservation={selectedReservation}
+                onSubmit={handleFormSubmit}
+                onClose={() => setIsFormOpen(false)}
+                rooms={rooms}
+                users={users}
+                timeSlot={timeSlots}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
         <div className="flex flex-wrap justify-start">
           <ReservationTable
@@ -237,11 +243,11 @@ export default function ReservationPage() {
         </div>
       </div>
       <ConfirmDialog
-      isOpen={isConfirmDialogOpen}
-      onConfirm={handleDelete}
-      onClose={() => setIsConfirmDialogOpen(false)}
-      message="Are you sure you want to delete this transaction?"
-    />
+        isOpen={isConfirmDialogOpen}
+        onConfirm={handleDelete}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        message="Are you sure you want to delete this transaction?"
+      />
     </div>
   );
 }

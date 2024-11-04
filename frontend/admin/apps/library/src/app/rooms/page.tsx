@@ -13,7 +13,6 @@ import { useEffect, useState } from "react";
 const apiUrl = `http://localhost:8082/api/rooms`;
 const apiRoomTypeUrl = `http://localhost:8082/api/room-types`;
 
-
 async function fetchRooms(): Promise<Room[]> {
   try {
     const response = await fetch(apiUrl);
@@ -43,6 +42,7 @@ async function fetchRoomTypes(): Promise<RoomType[]> {
 }
 
 export default function RoomsPage() {
+  const [loading, setLoading] = useState<boolean>(true);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [roomTypes, setRoomTypes] = useState<RoomType[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -73,6 +73,7 @@ export default function RoomsPage() {
       const fetchedRoomTypes = await fetchRoomTypes();
       setRooms(fetchedRooms);
       setRoomTypes(fetchedRoomTypes);
+      setLoading(false);
     };
 
     fetchData();
@@ -103,9 +104,7 @@ export default function RoomsPage() {
       if (!response.ok) {
         throw new Error("Failed to delete room");
       }
-      setRooms(
-        rooms.filter((t) => t.id !== roomIdToDelete)
-      );
+      setRooms(rooms.filter((t) => t.id !== roomIdToDelete));
       handleAddAlert(
         "ExclamationCircleIcon",
         "Success",
@@ -143,9 +142,7 @@ export default function RoomsPage() {
       if (method === "POST") {
         setRooms([...rooms, result.data]);
       } else {
-        setRooms(
-          rooms.map((t) => (t.id === result.data.id ? result.data : t))
-        );
+        setRooms(rooms.map((t) => (t.id === result.data.id ? result.data : t)));
       }
       setIsFormOpen(false);
       handleAddAlert(
@@ -159,6 +156,10 @@ export default function RoomsPage() {
       console.log(error);
     }
   };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className="min-h-screen p-6">
       <div className="container mx-auto">

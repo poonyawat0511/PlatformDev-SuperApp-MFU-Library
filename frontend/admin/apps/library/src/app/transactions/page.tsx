@@ -61,6 +61,7 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -96,6 +97,7 @@ export default function TransactionsPage() {
       setTransactions(fetchedTransactions);
       setBooks(fetchedBooks);
       setUsers(fetchedUsers);
+      setLoading(false);
     };
 
     fetchData();
@@ -139,18 +141,20 @@ export default function TransactionsPage() {
         },
         body: JSON.stringify({ transaction: transactionId }), // Send only the transaction ID as per API spec
       });
-  
+
       if (!response.ok) {
         throw new Error("Failed to renew transaction");
       }
-  
+
       const result = await response.json();
-  
+
       // Assuming you want to update the specific transaction in the transactions list
-      setTransactions(transactions.map((t) => 
-        t.id === transactionId ? result.data.transaction : t
-      ));
-  
+      setTransactions(
+        transactions.map((t) =>
+          t.id === transactionId ? result.data.transaction : t
+        )
+      );
+
       // Show a success message
       handleAddAlert(
         "ExclamationCircleIcon",
@@ -170,7 +174,6 @@ export default function TransactionsPage() {
       );
     }
   };
-  
 
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
@@ -184,7 +187,7 @@ export default function TransactionsPage() {
 
   const handleDelete = async () => {
     if (!transactionIdToDelete) return;
-  
+
     try {
       const response = await fetch(`${apiUrl}/${transactionIdToDelete}`, {
         method: "DELETE",
@@ -192,8 +195,15 @@ export default function TransactionsPage() {
       if (!response.ok) {
         throw new Error("Failed to delete transaction");
       }
-      setTransactions(transactions.filter((t) => t.id !== transactionIdToDelete));
-      handleAddAlert("ExclamationCircleIcon", "Success", "Transaction deleted successfully", tAlertType.SUCCESS);
+      setTransactions(
+        transactions.filter((t) => t.id !== transactionIdToDelete)
+      );
+      handleAddAlert(
+        "ExclamationCircleIcon",
+        "Success",
+        "Transaction deleted successfully",
+        tAlertType.SUCCESS
+      );
     } catch (error) {
       console.log(error);
     } finally {
@@ -201,7 +211,6 @@ export default function TransactionsPage() {
       setTransactionIdToDelete(null);
     }
   };
-  
 
   const handleFormSubmit = async (formData: Transaction) => {
     try {
@@ -242,6 +251,10 @@ export default function TransactionsPage() {
       console.log(error);
     }
   };
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen p-6">

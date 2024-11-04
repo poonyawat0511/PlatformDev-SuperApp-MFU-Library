@@ -15,7 +15,7 @@ export default function ReservationTable({
   onDelete,
 }: ReservationTableProps) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto w-full">
       <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-md">
         <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
           <tr>

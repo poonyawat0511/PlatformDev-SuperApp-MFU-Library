@@ -58,15 +58,18 @@ async function fetchTimeSlots(): Promise<Timeslot[]> {
 
 export default function RoomTimeSlotPage() {
   const [roomTimeSlots, setRoomTimeSlots] = useState<RoomTimeSlot[]>([]);
-  const [selectedRoomTimeSlot, setSelectedRoomTimeSlot] = useState<RoomTimeSlot | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedRoomTimeSlot, setSelectedRoomTimeSlot] =
+    useState<RoomTimeSlot | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [timeSlots, setTimeSlots] = useState<Timeslot[]>([]);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [roomTimeSlotIdToDelete, setRoomTimeSlotIdToDelete] = useState<string | null>(null);
+  const [roomTimeSlotIdToDelete, setRoomTimeSlotIdToDelete] = useState<
+    string | null
+  >(null);
   const { addAlert } = useGlobalContext();
 
-  
   const handleAddAlert = (
     iconName: keyof typeof Icons,
     title: string,
@@ -92,6 +95,7 @@ export default function RoomTimeSlotPage() {
       setRoomTimeSlots(fetchedReservations);
       setRooms(fetchedRooms);
       setTimeSlots(fetchedTimeslots);
+      setLoading(false);
     };
 
     fetchData();
@@ -178,6 +182,9 @@ export default function RoomTimeSlotPage() {
       console.log(error);
     }
   };
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen p-6">
