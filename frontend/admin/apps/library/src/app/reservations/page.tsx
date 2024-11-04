@@ -82,7 +82,8 @@ export default function ReservationPage() {
   const [selectedReservation, setSelectedReservation] =
     useState<Reservation | null>(null);
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
-
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
   const [reservationIdToDelete, setReservationIdToDelete] = useState<
     string | null
@@ -202,6 +203,29 @@ export default function ReservationPage() {
       console.log(error);
     }
   };
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const filteredReservations = reservations.filter((reservation) => {
+    // ตรวจสอบค่า room และ user ว่ามีข้อมูลก่อนจะเข้าถึง field `roomName` และ `username`
+    const username = reservation.user?.username?.toLowerCase() || "";
+    const query = searchQuery.toLowerCase();
+  
+    // การกรองตามคำค้นหา
+    const matchesSearch = username.includes(query);
+  
+    // การกรองตามประเภท
+    const matchesType =
+      typeFilter === "all" || reservation.type === typeFilter;
+  
+    return matchesSearch && matchesType;
+  });
+  
+
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setTypeFilter(e.target.value);
+  };
 
   if (loading) {
     return <div>Loading...</div>;
@@ -217,6 +241,43 @@ export default function ReservationPage() {
           >
             New Reservation
           </button>
+        </div>
+        <div className="flex items-center justify-between mb-6">
+          <div className="relative w-1/2">
+            <input
+              type="text"
+              placeholder="Search item here"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300"
+            />
+            <svg
+              className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-4.35-4.35M9 17a8 8 0 100-16 8 8 0 000 16z"
+              />
+            </svg>
+          </div>
+          <div className="relative w-1/4">
+            <select
+              value={typeFilter}
+              onChange={handleTypeChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-300"
+            >
+              <option value="all">All Reservations</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
         </div>
 
         {isFormOpen && (
@@ -234,13 +295,19 @@ export default function ReservationPage() {
           </div>
         )}
 
-        <div className="flex flex-wrap justify-start">
-          <ReservationTable
-            reservations={reservations}
-            onEdit={handleEdit}
-            onDelete={confirmDelete}
-          />
-        </div>
+        {filteredReservations.length > 0 ? (
+          <div className="flex flex-wrap justify-start">
+            <ReservationTable
+              reservations={filteredReservations}
+              onEdit={handleEdit}
+              onDelete={confirmDelete}
+            />
+          </div>
+        ) : (
+          <div className="text-center text-gray-500">
+            No Reservation available.
+          </div>
+        )}
       </div>
       <ConfirmDialog
         isOpen={isConfirmDialogOpen}
