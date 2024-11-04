@@ -1,10 +1,13 @@
 "use client";
 
+import * as Icons from "@heroicons/react/24/outline";
+import { useGlobalContext } from "@shared/context/GlobalContext";
+import { tAlert, tAlertType } from "@shared/utils/types/Alert";
 import { useEffect, useState } from "react";
-import { RoomType } from "../../utils/RoomtypeTypes";
-import RoomTypeTable from "../../components/RoomTypes/RoomTypeTable";
-import RoomTypeForm from "../../components/RoomTypes/RoomTypeForm";
 import ConfirmDialog from "../../components/RoomTypes/ConfirmDialog";
+import RoomTypeForm from "../../components/RoomTypes/RoomTypeForm";
+import RoomTypeTable from "../../components/RoomTypes/RoomTypeTable";
+import { RoomType } from "../../utils/RoomtypeTypes";
 
 const apiUrl = `http://localhost:8082/api/room-types`;
 
@@ -29,6 +32,23 @@ export default function RoomTypePage() {
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState<boolean>(false);
   const [selectedRoomTypeId, setSelectedRoomTypeId] = useState<string | null>(null); // Track room type for deletion
+  const { addAlert } = useGlobalContext();
+  const handleAddAlert = (
+    iconName: keyof typeof Icons,
+    title: string,
+    message: string,
+    type: tAlertType
+  ) => {
+    const newAlert: tAlert = {
+      title: title,
+      message: message,
+      buttonText: "X",
+      iconName: iconName,
+      type: type,
+      id: Math.random().toString(36).substring(2, 9),
+    };
+    addAlert(newAlert);
+  };
 
   useEffect(() => {
     fetchRoomTypes().then((data) => {
@@ -62,8 +82,9 @@ export default function RoomTypePage() {
           throw new Error("Failed to delete room type");
         }
         setRoomTypes(roomTypes.filter((roomType) => roomType.id !== selectedRoomTypeId));
-        setIsConfirmDialogOpen(false);  
-        setSelectedRoomTypeId(null); 
+        setIsConfirmDialogOpen(false);
+        setSelectedRoomTypeId(null);
+        handleAddAlert("ExclamationCircleIcon", "Success", "Room-Type deleted successfully", tAlertType.SUCCESS);
       } catch (error) {
         console.error("Failed to delete room type:", error);
       }
@@ -92,6 +113,12 @@ export default function RoomTypePage() {
           setRoomTypes([...roomTypes, result.data]);
         }
         setIsFormOpen(false);
+        handleAddAlert(
+          "ExclamationCircleIcon",
+          "Success",
+          "Room-Type updated successfully",
+          tAlertType.SUCCESS
+        );
       } else {
         const errorText = await response.text();
         console.error(`Failed to submit room type: ${errorText}`);

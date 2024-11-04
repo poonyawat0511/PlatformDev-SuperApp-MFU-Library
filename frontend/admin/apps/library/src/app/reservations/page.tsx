@@ -144,7 +144,7 @@ export default function ReservationPage() {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error("Failed to delete transaction");
+        throw new Error("Failed to delete reservation");
       }
       setReservations(
         reservations.filter((t) => t.id !== reservationIdToDelete)
@@ -152,7 +152,7 @@ export default function ReservationPage() {
       handleAddAlert(
         "ExclamationCircleIcon",
         "Success",
-        "Transaction deleted successfully",
+        "reservation deleted successfully",
         tAlertType.SUCCESS
       );
     } catch (error) {
@@ -194,7 +194,7 @@ export default function ReservationPage() {
       handleAddAlert(
         "ExclamationCircleIcon",
         "Success",
-        "Transaction updated successfully",
+        "reservation updated successfully",
         tAlertType.SUCCESS
       );
       setSelectedReservation(null);
@@ -246,7 +246,7 @@ export default function ReservationPage() {
         isOpen={isConfirmDialogOpen}
         onConfirm={handleDelete}
         onClose={() => setIsConfirmDialogOpen(false)}
-        message="Are you sure you want to delete this transaction?"
+        message="Are you sure you want to delete this reservation?"
       />
     </div>
   );

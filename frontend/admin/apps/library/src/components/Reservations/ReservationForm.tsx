@@ -233,7 +233,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({
         <label className="block text-gray-700 font-medium">Select Room</label>
         <select
           name="room"
-          value={formData.room.id || ""}
+          value={formData.room?.id || ""}
           onChange={handleChange}
           required
           className="w-full p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 focus:border-blue-500"

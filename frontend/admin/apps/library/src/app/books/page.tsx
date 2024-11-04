@@ -1,12 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Book } from "../../utils/BookTypes";
-import BookCard from "../../components/Books/BookCard";
-import BookForm from "../../components/Books/BookForm";
+import ConfirmDialog from "@/components/Books/ConfirmDialog";
+import * as Icons from "@heroicons/react/24/outline";
 import { useGlobalContext } from "@shared/context/GlobalContext";
 import { tAlert, tAlertType } from "@shared/utils/types/Alert";
-import * as Icons from "@heroicons/react/24/outline";
-import ConfirmDialog from "@/components/Books/ConfirmDialog";
+import { useEffect, useState } from "react";
+import BookCard from "../../components/Books/BookCard";
+import BookForm from "../../components/Books/BookForm";
+import { Book } from "../../utils/BookTypes";
 
 const apiUrl = "http://localhost:8082/api/books";
 
@@ -212,7 +212,7 @@ export default function BookPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 text-black focus:outline-none"
+              className="px-4 mx-2 text-black focus:outline-none"
             >
               <option value="All">All</option>
               {uniqueCategories.map((category, index) => (
