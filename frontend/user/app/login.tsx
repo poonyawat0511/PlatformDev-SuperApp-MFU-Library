@@ -21,7 +21,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        "http://172.27.72.20:8082/api/auth/login",
+        "http://172.20.10.11:8082/api/auth/login",
         {
           email,
           password,
@@ -29,16 +29,13 @@ export default function LoginScreen() {
       );
 
       if (response.data.message === "Login successful") {
-        // Navigate to the profile screen if login is successful
         router.push("./main");
       }
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        // Error response from server
         const errorMessage = error.response.data.message || "Login failed";
         Alert.alert("Login failed", errorMessage);
       } else {
-        // Network or other errors
         Alert.alert("Login failed", "An unexpected error occurred.");
       }
     }

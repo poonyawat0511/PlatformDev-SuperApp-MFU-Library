@@ -8,6 +8,7 @@ import {
   Alert,
   Image,
   ImageBackground,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -36,15 +37,20 @@ export default function Profile() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [selectedTransactionId, setSelectedTransactionId] = useState<
+    string | null
+  >(null);
+
   const fetchProfileAndReservations = async () => {
     try {
       const profileResponse = await axios.get(
-        "http://172.27.72.20:8082/api/users/profile"
+        "http://172.20.10.11:8082/api/users/profile"
       );
       setProfile(profileResponse.data);
 
       const reservationResponse = await axios.get(
-        "http://172.27.72.20:8082/api/reservations/"
+        "http://172.20.10.11:8082/api/reservations/"
       );
       const userReservations = reservationResponse.data.data.filter(
         (res: Reservation) =>
@@ -62,37 +68,31 @@ export default function Profile() {
   const fetchTransactions = async (username: string) => {
     try {
       const transactionResponse = await axios.get(
-        "http://172.27.72.20:8082/api/transactions/"
+        "http://172.20.10.11:8082/api/transactions/"
       );
 
-      // Filter transactions by username
       const userTransactions = transactionResponse.data.data.filter(
         (transaction: any) => transaction.user.username === username
       );
 
-      // Fetch renew status for each transaction
       const renewPromises = userTransactions.map(async (transaction: any) => {
         try {
-          // Fetch renew status for each transaction
           const renewResponse = await axios.get(
-            `http://172.27.72.20:8082/api/renews/?transaction=${transaction.id}`
+            `http://172.20.10.11:8082/api/renews/?transaction=${transaction.id}`
           );
 
-          // If renew request exists (status 200)
           if (renewResponse.data.data) {
             return {
               ...transaction,
               renewStatus: renewResponse.data.data.status,
-            }; // Return transaction with its renewStatus
+            };
           }
           return { ...transaction, renewStatus: "none" };
         } catch (error) {
-          // Handle 404 error, meaning no renew request exists for this transaction
-          return { ...transaction, renewStatus: "none" }; // No renews found, return 'none'
+          return { ...transaction, renewStatus: "none" };
         }
       });
 
-      // Wait for all renew status promises to resolve
       const transactionsWithRenewStatus = await Promise.all(renewPromises);
       setTransactions(transactionsWithRenewStatus);
     } catch (error) {
@@ -115,7 +115,7 @@ export default function Profile() {
   const handleLogout = async () => {
     try {
       const response = await axios.post(
-        "http://172.27.72.20:8082/api/auth/logout"
+        "http://172.20.10.11:8082/api/auth/logout"
       );
       if (response.data.message === "Logout successful") {
         Alert.alert("Success", "You have logged out successfully.", [
@@ -128,19 +128,29 @@ export default function Profile() {
     }
   };
 
-  const handleRenew = async (transactionId: string) => {
+  const handleOpenConfirmModal = (transactionId: string) => {
+    setSelectedTransactionId(transactionId);
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmRenew = async () => {
+    if (!selectedTransactionId) return;
+
     try {
       const response = await axios.post(
-        "http://172.27.72.20:8082/api/renews/",
-        { transaction: transactionId }
+        "http://172.20.10.11:8082/api/renews/",
+        { transaction: selectedTransactionId }
       );
       if (response.status === 200) {
         Alert.alert("Success", "Renew request sent successfully.");
-        fetchTransactions(profile?.username || ""); // Reload transactions
+        fetchTransactions(profile?.username || "");
       }
     } catch (error) {
       console.error("Error sending renew request:", error);
       Alert.alert("Error", "Failed to send renew request.");
+    } finally {
+      setShowConfirmModal(false);
+      setSelectedTransactionId(null);
     }
   };
 
@@ -261,13 +271,49 @@ export default function Profile() {
                       {new Date(item.borrowDate).toLocaleDateString()}
                     </Text>
                     <Text>
-                      Date: {new Date(item.dueDate).toLocaleDateString()}
+                      Due Date: {new Date(item.dueDate).toLocaleDateString()}
                     </Text>
+                    <TouchableOpacity
+                      onPress={() => handleOpenConfirmModal(item.id)}
+                      style={styles.renewButton}
+                    >
+                      <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                        Renew
+                      </Text>
+                    </TouchableOpacity>
                   </View>
                 ))}
               </>
             )}
           </View>
+
+          <Modal
+            transparent={true}
+            visible={showConfirmModal}
+            animationType="fade"
+            onRequestClose={() => setShowConfirmModal(false)}
+          >
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContainer}>
+                <Text style={styles.modalTitle}>Confirm Renewal</Text>
+                <Text>Are you sure you want to renew this book?</Text>
+                <View style={styles.modalButtonContainer}>
+                  <TouchableOpacity
+                    style={styles.confirmButton}
+                    onPress={handleConfirmRenew}
+                  >
+                    <Text style={{ color: "#fff" }}>Confirm</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => setShowConfirmModal(false)}
+                  >
+                    <Text style={{ color: "#fff" }}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
 
           <View style={styles.logoutButton}>
             <TouchableOpacity
@@ -304,9 +350,10 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   emptyList: {
-    flexGrow: 0.3,
-    justifyContent: "center",
-    alignItems: "center",
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "bold",
+    marginTop: 20,
   },
   transactionCard: {
     padding: 10,
@@ -315,11 +362,45 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: 300,
     alignItems: "flex-start",
-    justifyContent: "center",
   },
-  bookImage: {
-    width: 100,
-    height: 150,
+  renewButton: {
+    backgroundColor: "#BD1616",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  }, modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
     marginBottom: 10,
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    marginTop: 20,
+  },
+  cancelButton: {
+    backgroundColor: "gray",
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 10,
+  },
+  confirmButton: {
+    backgroundColor: "#BD1616",
+    padding: 10,
+    borderRadius: 5,
+    marginHorizontal: 10,
   },
 });

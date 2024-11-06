@@ -36,12 +36,12 @@ export default function BookPage() {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get("http://172.27.72.20:8082/api/books/");
+      const response = await axios.get("http://172.20.10.11:8082/api/books/");
       const updatedBooks = response.data.data.map((book: Book) => ({
         ...book,
         bookImage: book.bookImage.replace(
           "http://127.0.0.1",
-          "http://172.27.72.20"
+          "http://172.20.10.11"
         ),
       }));
       setBooks(updatedBooks);
@@ -55,7 +55,7 @@ export default function BookPage() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        "http://172.27.72.20:8082/api/users/profile"
+        "http://172.20.10.11:8082/api/users/profile"
       );
       setUsername(response.data.username);
     } catch (error) {
@@ -158,14 +158,16 @@ export default function BookPage() {
                   />
                   <Text style={styles.modalTitle}>{selectedBook.name.en}</Text>
                   <Text style={styles.modalDescription}>
-                    Description: {selectedBook.description.en}
+                    {selectedBook.description.en}
                   </Text>
-                  <Text style={styles.modalDetails}>
-                    Quantity: {selectedBook.quantity}
-                  </Text>
-                  <Text style={styles.modalDetails}>
-                    ISBN: {selectedBook.ISBN}
-                  </Text>
+                  <View style={styles.modalDetailsContainer}>
+                    <Text style={styles.modalDetails}>
+                      Quantity: {selectedBook.quantity}
+                    </Text>
+                    <Text style={styles.modalDetails}>
+                      ISBN: {selectedBook.ISBN}
+                    </Text>
+                  </View>
                   <TouchableOpacity
                     style={styles.closeButton}
                     onPress={closeModal}
@@ -217,53 +219,69 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "gray",
   },
-  bookStatus: { color: "#9400FF", fontSize: 15, fontWeight: "bold" },
+  bookStatus: { fontSize: 15, fontWeight: "bold" },
   modalContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
   },
   modal: {
-    flex: 0,
-    width: "60%",
+    width: "80%",
     padding: 20,
     backgroundColor: "white",
-    borderRadius: 10,
-    alignItems: "flex-start",
-    justifyContent: "flex-start",
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 10,
   },
   modalImage: {
     width: "100%",
-    height: 150,
+    height: 200,
     borderRadius: 10,
     marginBottom: 20,
     resizeMode: "contain",
   },
   modalContent: {
-    width: "100%",
+    alignItems: "center",
   },
   modalTitle: {
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 10,
-    paddingBottom: 5,
-    borderBottomWidth: 2,
-    borderBottomColor: "gray",
+    textAlign: "center",
   },
   modalDescription: {
-    fontSize: 17,
-    marginBottom: 5,
+    fontSize: 16,
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  modalDetailsContainer: {
+    marginTop: 10,
   },
   modalDetails: {
-    fontSize: 17,
-    marginBottom: 5,
+    fontSize: 15,
+    color: "gray",
+    marginVertical: 2,
   },
   background: { flex: 1 },
   closeButton: {
-    marginTop: 17,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    marginTop: 15,
     alignItems: "center",
+  },
+  header: {
+    alignItems: "flex-start",
+    marginLeft: 10,
+    marginRight: 10,
+    borderBottomColor: "gray",
+    paddingBottom: 4,
+    borderBottomWidth: 2,
+  },
+  headerText: {
+    fontSize: 25,
+    fontWeight: "bold",
+    paddingTop: 10,
   },
 });

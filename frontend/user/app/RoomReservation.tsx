@@ -51,25 +51,25 @@ export default function RoomReservation() {
   const [refresh, setRefresh] = useState(false);
 
   const fetchTimeSlots = async () => {
-    const response = await axios.get("http://172.27.72.20:8082/api/timeslots/");
+    const response = await axios.get("http://172.20.10.11:8082/api/timeslots/");
     setTimeSlots(response.data.data);
   };
 
   const fetchRooms = async () => {
-    const response = await axios.get("http://172.27.72.20:8082/api/rooms/");
+    const response = await axios.get("http://172.20.10.11:8082/api/rooms/");
     setRooms(response.data.data);
   };
 
   const fetchRoomTimeSlots = async () => {
     const response = await axios.get(
-      "http://172.27.72.20:8082/api/room-timeslots/"
+      "http://172.20.10.11:8082/api/room-timeslots/"
     );
     setRoomTimeSlots(response.data.data);
   };
 
   const fetchUser = async () => {
     const response = await axios.get(
-      "http://172.27.72.20:8082/api/users/profile"
+      "http://172.20.10.11:8082/api/users/profile"
     );
     setUser(response.data);
   };
@@ -97,22 +97,22 @@ export default function RoomReservation() {
 
     if (slot?.status === "free") {
       setSelectedSlot({ roomId: room.id, timeSlotId: timeSlot.id });
-      setModalVisible(true); // Show confirmation modal
+      setModalVisible(true);
     }
   };
 
   const handleReservation = async () => {
     if (selectedSlot && user) {
       try {
-        await axios.post("http://172.27.72.20:8082/api/reservations/", {
+        await axios.post("http://172.20.10.11:8082/api/reservations/", {
           room: selectedSlot.roomId,
           user: user.username,
           type: "pending",
           timeSlot: selectedSlot.timeSlotId,
         });
         Alert.alert("Reservation successful");
-        setModalVisible(false); // Close the modal
-        setRefresh(!refresh); // Trigger data refresh
+        setModalVisible(false);
+        setRefresh(!refresh);
       } catch (error) {
         console.error("Reservation failed:", error);
         Alert.alert("Reservation failed");
@@ -121,8 +121,8 @@ export default function RoomReservation() {
   };
 
   const handleCancel = () => {
-    setModalVisible(false); // Close the modal
-    setRefresh(!refresh); // Trigger data refresh
+    setModalVisible(false);
+    setRefresh(!refresh);
   };
 
   return (
@@ -146,7 +146,6 @@ export default function RoomReservation() {
       </View>
 
       <View>
-        {/* Text and Image Above Table */}
         <View style={{ alignItems: "center", marginBottom: 10, marginTop: 10 }}>
           <Image
             source={require("../assets/images/LibraryMFURoomRuleBanner.png")}
@@ -175,9 +174,8 @@ export default function RoomReservation() {
               ))}
             </View>
 
-            {/* Table Content */}
             {rooms
-              .sort((a, b) => a.type.name.en.localeCompare(b.type.name.en)) // Sort rooms by name
+              .sort((a, b) => a.type.name.en.localeCompare(b.type.name.en))
               .map((room) => (
                 <View key={room.id} style={styles.tableRow}>
                   <Text style={styles.headerCell}>
@@ -212,29 +210,17 @@ export default function RoomReservation() {
                 </View>
               ))}
 
-            {/* Confirmation Modal */}
             <Modal
               visible={modalVisible}
               transparent={true}
-              animationType="slide"
+              animationType="fade"
             >
               <View style={styles.modalContainer}>
                 <View style={styles.modal}>
                   {selectedSlot && (
                     <>
-                      <Text
-                        style={{
-                          fontSize: 22,
-                          fontWeight: "bold",
-                          paddingBottom: 5,
-                          borderBottomWidth: 2,
-                          borderBottomColor: "gray",
-                        }}
-                      >
-                        Confirm Reservation
-                      </Text>
-                      {/* Find the selected room and time slot details */}
-                      <Text style={{ fontSize: 17,}}>
+                      <Text style={styles.modalTitle}>Confirm Reservation</Text>
+                      <Text style={styles.modalText}>
                         Room:{" "}
                         {
                           rooms.find((room) => room.id === selectedSlot.roomId)
@@ -245,7 +231,7 @@ export default function RoomReservation() {
                             ?.room
                         }
                       </Text>
-                      <Text style={{ fontSize: 17,  }}>
+                      <Text style={styles.modalText}>
                         Time Slot:{" "}
                         {
                           timeSlots.find(
@@ -259,32 +245,25 @@ export default function RoomReservation() {
                           )?.end
                         }
                       </Text>
-                      <View
-                        style={{
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginTop:20
-                        }}
-                      >
+                      <View style={styles.modalButtonContainer}>
                         <TouchableOpacity
                           onPress={handleReservation}
-                          style={styles.modalButton}
+                          style={styles.confirmButton}
                         >
                           <FontAwesome
                             name="check-circle-o"
-                            size={35}
-                            color="black"
+                            size={30}
+                            color="white"
                           />
                         </TouchableOpacity>
                         <TouchableOpacity
                           onPress={handleCancel}
-                          style={styles.modalButton}
+                          style={styles.cancelButton}
                         >
                           <MaterialIcons
                             name="cancel"
-                            size={35}
-                            color="black"
+                            size={30}
+                            color="white"
                           />
                         </TouchableOpacity>
                       </View>
@@ -308,12 +287,12 @@ const styles = StyleSheet.create({
   headerCell: {
     padding: 10,
     backgroundColor: "#E3E1E1",
-    width: 120, // Fixed width to match the content cells
+    width: 120,
     textAlign: "center",
     fontWeight: "bold",
   },
   cell: {
-    width: 120, // Fixed width to match the headers
+    width: 120,
     padding: 10,
     justifyContent: "center",
     alignItems: "center",
@@ -338,20 +317,59 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
   },
   modal: {
-    width: "auto",
-    height: "auto",
+    width: "80%",
     padding: 20,
     backgroundColor: "white",
-    borderRadius: 10,
+    borderRadius: 15,
+    alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
   },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#333",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+    paddingBottom: 5,
+  },
+  modalText: {
+    fontSize: 16,
+    marginVertical: 5,
+    color: "#555",
+  },
+  modalButtonContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    width: "80%",
+  },
+  confirmButton: {
+    backgroundColor: "#BD1616",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    alignItems: "center",
+    width: "40%",
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: "gray",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+    alignItems: "center",
+    width: "40%",
+    marginHorizontal: 5,
+  },
+
   background: { flex: 1 },
   modalButton: {
     justifyContent: "space-between",
