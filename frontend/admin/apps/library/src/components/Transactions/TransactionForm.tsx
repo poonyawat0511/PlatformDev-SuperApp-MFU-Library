@@ -181,7 +181,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         <input
           type="text"
           name="ISBN"
-          value={formData.book.ISBN}
+          value={formData.book?.ISBN}
           onChange={handleChange}
           placeholder="Enter ISBN"
           required
