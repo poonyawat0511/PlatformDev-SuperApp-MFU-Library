@@ -213,25 +213,25 @@ export default function Profile() {
               <View key={item.id} style={styles.reservationCard}>
                 <Text>
                   <Text style={{ fontWeight: "bold" }}>
-                    Room: {item.room.room}
+                    Room: {item?.room?.room||"-"}
                   </Text>
                 </Text>
                 <Text style={{ justifyContent: "space-between" }}>
                   <Text>
-                    Time: {item.timeSlot.start} - {item.timeSlot.end}
+                    Time: {item?.timeSlot?.start||"-"} - {item?.timeSlot?.end||"-"}
                   </Text>
                   <Text
                     style={{
                       color:
-                        item.type === "confirmed"
+                        item?.type === "confirmed"
                           ? "green"
-                          : item.type === "pending"
+                          : item?.type === "pending"
                           ? "yellow"
                           : "red",
                     }}
                   >
                     {" "}
-                    : {item.type}
+                    : {item?.type||"-"}
                   </Text>
                 </Text>
               </View>
@@ -264,14 +264,14 @@ export default function Profile() {
                 {transactions.map((item) => (
                   <View key={item.id} style={styles.transactionCard}>
                     <Text style={{ fontWeight: "bold" }}>
-                      Book: {item.book.name.en}
+                      Book: {item?.book?.name?.en||"-"}
                     </Text>
                     <Text>
                       Borrow Date:{" "}
-                      {new Date(item.borrowDate).toLocaleDateString()}
+                      {new Date(item?.borrowDate||"-").toLocaleDateString()}
                     </Text>
                     <Text>
-                      Due Date: {new Date(item.dueDate).toLocaleDateString()}
+                      Due Date: {new Date(item?.dueDate||"-").toLocaleDateString()}
                     </Text>
                     <TouchableOpacity
                       onPress={() => handleOpenConfirmModal(item.id)}

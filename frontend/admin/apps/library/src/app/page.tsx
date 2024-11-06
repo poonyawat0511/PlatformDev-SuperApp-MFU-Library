@@ -240,7 +240,7 @@ export default function Home() {
             {recentTransactions.map((transaction, index) => (
               <tr key={index}>
                 <td className="border px-4 py-2">{transaction.user?.username||"-"}</td>
-                <td className="border px-4 py-2">{transaction.book.name.en||"-"}</td>
+                <td className="border px-4 py-2">{transaction?.book?.name?.en||"-"}</td>
                 <td className="border px-4 py-2">{transaction.status||"-"}</td>
                 <td className="border px-4 py-2">{new Date(transaction.borrowDate).toLocaleDateString()}</td>
                 <td className="border px-4 py-2">{transaction.returnDate ? new Date(transaction.returnDate).toLocaleDateString() : '-'}</td>
