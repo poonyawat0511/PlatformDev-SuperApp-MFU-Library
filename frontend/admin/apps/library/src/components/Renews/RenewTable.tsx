@@ -29,10 +29,10 @@ export default function RenewTable({
             return (
               <tr key={renew.id} className="border-b hover:bg-gray-50">
                 <td className="px-6 py-4 text-center">
-                  {renew.transaction.user?.username||"-"}
+                  {renew.transaction?.user?.username||"-"}
                 </td>
                 <td className="px-6 py-4 capitalize text-center">
-                  {renew.transaction.book.ISBN || "-"}
+                  {renew.transaction?.book?.ISBN || "-"}
                 </td>
                 <td className="px-6 py-4 capitalize text-center">
                   {renew.status || "-"}

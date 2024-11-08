@@ -91,8 +91,10 @@ export default function RoomReservation() {
   );
 
   const handleCellClick = (room: Room, timeSlot: TimeSlot) => {
+    if (!room || !timeSlot || !roomTimeSlots) return; // Early exit if data is missing
+
     const slot = roomTimeSlots.find(
-      (rts) => rts.room.id === room.id && rts.timeSlot.id === timeSlot.id
+      (rts) => rts.room?.id === room.id && rts.timeSlot?.id === timeSlot.id
     );
 
     if (slot?.status === "free") {
@@ -184,8 +186,8 @@ export default function RoomReservation() {
                   {timeSlots.map((timeSlot) => {
                     const slot = roomTimeSlots.find(
                       (rts) =>
-                        rts.room.id === room.id &&
-                        rts.timeSlot.id === timeSlot.id
+                        rts.room?.id === room.id &&
+                        rts.timeSlot?.id === timeSlot.id
                     );
 
                     return (
@@ -203,7 +205,9 @@ export default function RoomReservation() {
                         ]}
                         onPress={() => handleCellClick(room, timeSlot)}
                       >
-                        <Text style={styles.cellText}>{slot?.status}</Text>
+                        <Text style={styles.cellText}>
+                          {slot?.status ?? "N/A"}
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -217,7 +221,7 @@ export default function RoomReservation() {
             >
               <View style={styles.modalContainer}>
                 <View style={styles.modal}>
-                  {selectedSlot && (
+                  {selectedSlot && rooms.length > 0 && timeSlots.length > 0 && (
                     <>
                       <Text style={styles.modalTitle}>Confirm Reservation</Text>
                       <Text style={styles.modalText}>
