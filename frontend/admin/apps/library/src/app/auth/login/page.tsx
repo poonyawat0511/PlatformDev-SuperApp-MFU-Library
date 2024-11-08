@@ -35,11 +35,11 @@ export default function LoginPage() {
     <div 
       className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
       style={{ 
-      backgroundImage: `url('https://i.ibb.co/WpZBbjs/mfu-bg2.png')`,
-      backgroundSize: '80%', 
-      backgroundPosition: 'center', 
-      backgroundRepeat: 'no-repeat',
-       }}
+        backgroundImage: `url('https://i.ibb.co/WpZBbjs/mfu-bg2.png')`, 
+        backgroundSize: 'cover', // ทำให้ภาพขยายเต็มจอ
+        backgroundPosition: 'center', // ให้ภาพอยู่ตรงกลาง
+        backgroundRepeat: 'no-repeat' 
+      }}
     >
       <div className="bg-white/30 backdrop-blur-md p-8 rounded-lg shadow-lg w-full max-w-md border border-white/10 relative z-10">
         {/* Logo */}

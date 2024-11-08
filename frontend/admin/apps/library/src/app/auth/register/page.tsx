@@ -46,7 +46,7 @@ export default function RegisterPage() {
       className="min-h-screen flex items-center justify-center bg-cover bg-center relative"
       style={{
         backgroundImage: `url('https://i.ibb.co/WpZBbjs/mfu-bg2.png')`,
-        backgroundSize: '80%',
+        backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}
