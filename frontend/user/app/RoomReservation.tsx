@@ -24,6 +24,7 @@ interface TimeSlot {
 interface Room {
   id: string;
   room: number;
+  floor: number;
   type: {
     name: {
       th: string;
@@ -49,6 +50,7 @@ export default function RoomReservation() {
   const [modalVisible, setModalVisible] = useState(false);
   const [user, setUser] = useState<{ username: string } | null>(null);
   const [refresh, setRefresh] = useState(false);
+  const [selectedFloor, setSelectedFloor] = useState<number | null>(null); // Track selected floor
 
   const fetchTimeSlots = async () => {
     const response = await axios.get("http://172.20.10.11:8082/api/timeslots/");
@@ -127,6 +129,16 @@ export default function RoomReservation() {
     setRefresh(!refresh);
   };
 
+  const handleFilterByFloor = (floor: number | null) => {
+    setSelectedFloor(floor);
+  };
+
+  const filteredRooms = selectedFloor
+    ? rooms.filter((room) => room.floor === selectedFloor)
+    : rooms;
+
+  const floors = Array.from(new Set(rooms.map((room) => room.floor)));
+
   return (
     <ImageBackground
       imageStyle={{ backgroundColor: "#FFFFFF" }}
@@ -142,12 +154,12 @@ export default function RoomReservation() {
           borderBottomWidth: 2,
         }}
       >
-        <Text style={{ fontSize: 25, fontWeight: "bold", paddingTop: 10 }}>
+        <Text style={{ fontSize: 35, fontWeight: "bold", paddingTop: 10 }}>
           Room Reservation
         </Text>
       </View>
 
-      <View>
+      <View style={{ flex: 1 }}>
         <View style={{ alignItems: "center", marginBottom: 10, marginTop: 10 }}>
           <Image
             source={require("../assets/images/LibraryMFURoomRuleBanner.png")}
@@ -155,166 +167,217 @@ export default function RoomReservation() {
               width: "95%",
               height: 200,
               resizeMode: "contain",
-              borderWidth: 1,
+              borderWidth: 2,
               borderColor: "gray",
-              borderRadius: 20,
+              borderRadius: 15,
+              backgroundColor: "#FBF6E2",
             }}
           />
         </View>
-
-        <ScrollView horizontal>
-          <View
-            style={{ alignItems: "center", marginBottom: 10, marginTop: 20 }}
-          >
-            {/* Table Headers */}
-            <View style={styles.tableRow}>
-              <Text style={styles.headerCell}>Room/Time</Text>
-              {timeSlots.map((slot) => (
-                <Text key={slot.id} style={styles.headerCell}>
-                  {slot.start} - {slot.end}
-                </Text>
+        <View>
+          {/* Floor Filter Buttons */}
+          <ScrollView horizontal>
+            <View style={styles.floorFilterContainer}>
+              <TouchableOpacity
+                onPress={() => handleFilterByFloor(null)}
+                style={[
+                  styles.floorButton,
+                  selectedFloor === null && styles.selectedFloorButton,
+                ]}
+              >
+                <Text>All Floors</Text>
+              </TouchableOpacity>
+              {floors.map((floor) => (
+                <TouchableOpacity
+                  key={floor}
+                  onPress={() => handleFilterByFloor(floor)}
+                  style={[
+                    styles.floorButton,
+                    selectedFloor === floor && styles.selectedFloorButton,
+                  ]}
+                >
+                  <Text>Floor {floor}</Text>
+                </TouchableOpacity>
               ))}
             </View>
-
-            {rooms
-              .sort((a, b) => a.type.name.en.localeCompare(b.type.name.en))
-              .map((room) => (
-                <View key={room.id} style={styles.tableRow}>
-                  <Text style={styles.headerCell}>
-                    {room.type.name.en} {room.room}
-                  </Text>
-                  {timeSlots.map((timeSlot) => {
-                    const slot = roomTimeSlots.find(
-                      (rts) =>
-                        rts.room?.id === room.id &&
-                        rts.timeSlot?.id === timeSlot.id
-                    );
-
-                    return (
-                      <TouchableOpacity
-                        key={timeSlot.id}
-                        style={[
-                          styles.cell,
-                          slot
-                            ? slot.status === "free"
-                              ? styles.freeCell
-                              : slot.status === "reserved"
-                              ? styles.reservedCell
-                              : styles.inUseCell
-                            : styles.emptyCell,
-                        ]}
-                        onPress={() => handleCellClick(room, timeSlot)}
-                      >
-                        <Text style={styles.cellText}>
-                          {slot?.status ?? "N/A"}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ))}
-
-            <Modal
-              visible={modalVisible}
-              transparent={true}
-              animationType="fade"
+          </ScrollView>
+        </View>
+        <ScrollView horizontal>
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1 }}
+            nestedScrollEnabled={true}
+            style={{ flex: 1 }}
+          >
+            <View
+              style={{ alignItems: "center", marginBottom: 10, marginStart: 6 }}
             >
-              <View style={styles.modalContainer}>
-                <View style={styles.modal}>
-                  {selectedSlot && rooms.length > 0 && timeSlots.length > 0 && (
-                    <>
-                      <Text style={styles.modalTitle}>Confirm Reservation</Text>
-                      <Text style={styles.modalText}>
-                        Room:{" "}
-                        {
-                          rooms.find((room) => room.id === selectedSlot.roomId)
-                            ?.type.name.en
-                        }{" "}
-                        {
-                          rooms.find((room) => room.id === selectedSlot.roomId)
-                            ?.room
-                        }
-                      </Text>
-                      <Text style={styles.modalText}>
-                        Time Slot:{" "}
-                        {
-                          timeSlots.find(
-                            (slot) => slot.id === selectedSlot.timeSlotId
-                          )?.start
-                        }{" "}
-                        -{" "}
-                        {
-                          timeSlots.find(
-                            (slot) => slot.id === selectedSlot.timeSlotId
-                          )?.end
-                        }
-                      </Text>
-                      <View style={styles.modalButtonContainer}>
-                        <TouchableOpacity
-                          onPress={handleReservation}
-                          style={styles.confirmButton}
-                        >
-                          <FontAwesome
-                            name="check-circle-o"
-                            size={30}
-                            color="white"
-                          />
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          onPress={handleCancel}
-                          style={styles.cancelButton}
-                        >
-                          <MaterialIcons
-                            name="cancel"
-                            size={30}
-                            color="white"
-                          />
-                        </TouchableOpacity>
-                      </View>
-                    </>
-                  )}
-                </View>
+              {/* Table Headers */}
+              <View style={styles.tableRow}>
+                <Text style={styles.headerCell}>Room/Time</Text>
+                {timeSlots.map((slot) => (
+                  <Text key={slot.id} style={styles.headerCell}>
+                    {slot.start} - {slot.end}
+                  </Text>
+                ))}
               </View>
-            </Modal>
-          </View>
+
+              {filteredRooms
+                .sort((a, b) => a.type.name.en.localeCompare(b.type.name.en))
+                .map((room) => (
+                  <View key={room.id} style={styles.tableRow}>
+                    <Text style={styles.headerCell}>
+                      {room.type.name.en} {room.room}
+                    </Text>
+                    {timeSlots.map((timeSlot) => {
+                      const slot = roomTimeSlots.find(
+                        (rts) =>
+                          rts.room?.id === room.id &&
+                          rts.timeSlot?.id === timeSlot.id
+                      );
+
+                      return (
+                        <TouchableOpacity
+                          key={timeSlot.id}
+                          style={[
+                            styles.cell,
+                            slot
+                              ? slot.status === "free"
+                                ? styles.freeCell
+                                : slot.status === "reserved"
+                                ? styles.reservedCell
+                                : styles.inUseCell
+                              : styles.emptyCell,
+                          ]}
+                          onPress={() => handleCellClick(room, timeSlot)}
+                        >
+                          <Text style={styles.cellText}>
+                            {slot?.status ?? "-"}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                ))}
+            </View>
+          </ScrollView>
         </ScrollView>
+
+        <Modal visible={modalVisible} transparent={true} animationType="fade">
+          <View style={styles.modalContainer}>
+            <View style={styles.modal}>
+              {selectedSlot && rooms.length > 0 && timeSlots.length > 0 && (
+                <>
+                  <Text style={styles.modalTitle}>Confirm Reservation</Text>
+                  <Text style={styles.modalText}>
+                    Room:{" "}
+                    {
+                      rooms.find((room) => room.id === selectedSlot.roomId)
+                        ?.type.name.en
+                    }{" "}
+                    {
+                      rooms.find((room) => room.id === selectedSlot.roomId)
+                        ?.room
+                    }
+                  </Text>
+                  <Text style={styles.modalText}>
+                    Time Slot:{" "}
+                    {
+                      timeSlots.find(
+                        (slot) => slot.id === selectedSlot.timeSlotId
+                      )?.start
+                    }{" "}
+                    -{" "}
+                    {
+                      timeSlots.find(
+                        (slot) => slot.id === selectedSlot.timeSlotId
+                      )?.end
+                    }
+                  </Text>
+                  <View style={styles.modalButtonContainer}>
+                    <TouchableOpacity
+                      onPress={handleReservation}
+                      style={styles.confirmButton}
+                    >
+                      <FontAwesome
+                        name="check-circle-o"
+                        size={25}
+                        color="white"
+                      />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleCancel}
+                      style={styles.cancelButton}
+                    >
+                      <MaterialIcons name="cancel" size={25} color="white" />
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
       </View>
     </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  floorFilterContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    marginVertical: 10,
+  },
+  floorButton: {
+    padding: 10,
+    marginHorizontal: 5,
+    backgroundColor: "#F0F0F0",
+    borderRadius: 5,
+    flexShrink: 0,
+    minWidth: 120,
+    alignItems: "center",
+  },
+  selectedFloorButton: {
+    backgroundColor: "#CCC",
+  },
   tableRow: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 10,
   },
   headerCell: {
     padding: 10,
-    backgroundColor: "#E3E1E1",
+    backgroundColor: "#F9F4D2",
     width: 120,
     textAlign: "center",
     fontWeight: "bold",
+    marginRight: 10,
+    borderRadius: 10,
   },
   cell: {
     width: 120,
     padding: 10,
     justifyContent: "center",
     alignItems: "center",
+    marginRight: 10,
   },
   cellText: {
     color: "dark",
   },
   freeCell: {
     backgroundColor: "#91C483",
+    borderRadius: 10,
   },
   reservedCell: {
     backgroundColor: "#FFE162",
+    borderRadius: 10,
   },
   inUseCell: {
     backgroundColor: "#FF6464",
+    borderRadius: 10,
   },
   emptyCell: {
     backgroundColor: "#FFE700",
+    borderRadius: 10,
     opacity: 0,
   },
   modalContainer: {

@@ -103,17 +103,25 @@ export default function BookPage() {
           borderBottomWidth: 2,
         }}
       >
-        <Text style={{ fontSize: 25, fontWeight: "bold", paddingTop: 10 }}>
+        <Text style={{ fontSize: 40, fontWeight: "bold", paddingTop: 10 }}>
           All Books
         </Text>
       </View>
       <View style={styles.container}>
-        <TextInput
-          style={styles.searchBar}
-          placeholder="Search books..."
-          value={searchText}
-          onChangeText={setSearchText}
-        />
+        <View style={styles.searchContainer}>
+          <Ionicons
+            name="search"
+            size={20}
+            color="gray"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchBar}
+            placeholder="Search books..."
+            value={searchText}
+            onChangeText={setSearchText}
+          />
+        </View>
         <FlatList
           data={filteredBooks}
           keyExtractor={(item) => item.id}
@@ -128,7 +136,6 @@ export default function BookPage() {
                 style={styles.bookImage}
               />
               <Text style={styles.bookName}>{item.name.en}</Text>
-
               <Text>
                 Status:
                 <Text
@@ -190,20 +197,37 @@ export default function BookPage() {
 
 const styles = StyleSheet.create({
   container: { flex: 3, paddingTop: 10 },
+  searchIcon: {
+    position: "absolute",
+    right: 25,
+    zIndex: 1,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderColor: "gray",
+    borderWidth: 1,
+    margin: 10,
+    paddingLeft:5,
+    borderRadius: 20,
+    width: "90%",
+    alignSelf: "center",
+  },
   searchBar: {
     height: 40,
     borderColor: "gray",
     borderWidth: 1,
     margin: 10,
-    paddingLeft: 8,
+    paddingLeft: 20,
     borderRadius: 20,
+    flex: 1,
   },
   card: {
     flex: 5,
     margin: 10,
     borderRadius: 15,
     height: 350,
-    alignItems: "center",
+    alignItems: "flex-start",
     overflow: "hidden",
   },
   bookImage: {
@@ -242,7 +266,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 10,
     marginBottom: 20,
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   modalContent: {
     alignItems: "center",
@@ -270,18 +294,5 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: 15,
     alignItems: "center",
-  },
-  header: {
-    alignItems: "flex-start",
-    marginLeft: 10,
-    marginRight: 10,
-    borderBottomColor: "gray",
-    paddingBottom: 4,
-    borderBottomWidth: 2,
-  },
-  headerText: {
-    fontSize: 25,
-    fontWeight: "bold",
-    paddingTop: 10,
   },
 });

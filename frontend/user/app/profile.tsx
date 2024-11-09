@@ -1,3 +1,4 @@
+import { FontAwesome } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import axios from "axios";
@@ -15,7 +16,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
 interface Reservation {
   id: string;
   room: { id: string; room: number };
@@ -41,6 +41,8 @@ export default function Profile() {
   const [selectedTransactionId, setSelectedTransactionId] = useState<
     string | null
   >(null);
+  const [showRoomReservation, setShowRoomReservation] = useState(false);
+  const [showBorrowedBooks, setShowBorrowedBooks] = useState(false);
 
   const fetchProfileAndReservations = async () => {
     try {
@@ -166,112 +168,111 @@ export default function Profile() {
       <ScrollView>
         <View style={styles.container}>
           <View
-            style={{ alignItems: "center", marginBottom: 10, marginTop: 20 }}
+            style={{ alignItems: "center", marginBottom: 10, marginTop: 5 }}
           >
             <Image source={require("../assets/images/LibraryMFUprofile.png")} />
           </View>
 
           <View
             style={{
-              alignItems: "flex-start",
+              alignItems: "center",
               paddingBottom: 5,
               borderBottomWidth: 2,
               borderBottomColor: "gray",
               margin: 10,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+            <Text style={{ fontSize: 15, fontWeight: "bold" }}>
               Student ID: {profile?.username}
             </Text>
-            <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+            <Text style={{ fontSize: 15, fontWeight: "bold" }}>
               Email: {profile?.email}
             </Text>
           </View>
 
-          <View
-            style={{
-              alignItems: "center",
-              padding: 20,
-              backgroundColor: "#BD1616",
-              borderRadius: 15,
-              margin: 10,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 25,
-                fontWeight: "bold",
-                color: "#FFFFFF",
-                borderBottomColor: "#FFFFFF",
-                paddingBottom: 4,
-                borderBottomWidth: 2,
-              }}
+          {/* Room Reservation Section */}
+          <View style={{ margin: 10, alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => setShowRoomReservation(!showRoomReservation)}
+              style={{ flexDirection: "row", alignItems: "center" }}
             >
-              Your Room Reservation
-            </Text>
-            {reservations.map((item) => (
-              <View key={item.id} style={styles.reservationCard}>
-                <Text>
-                  <Text style={{ fontWeight: "bold" }}>
-                    Room: {item?.room?.room||"-"}
-                  </Text>
-                </Text>
-                <Text style={{ justifyContent: "space-between" }}>
-                  <Text>
-                    Time: {item?.timeSlot?.start||"-"} - {item?.timeSlot?.end||"-"}
-                  </Text>
-                  <Text
-                    style={{
-                      color:
-                        item?.type === "confirmed"
-                          ? "green"
-                          : item?.type === "pending"
-                          ? "yellow"
-                          : "red",
-                    }}
-                  >
-                    {" "}
-                    : {item?.type||"-"}
-                  </Text>
-                </Text>
+              <Text
+                style={{ fontSize: 25, fontWeight: "bold", color: "#000000" }}
+              >
+                Your Reservations
+              </Text>
+              <FontAwesome
+                name={showRoomReservation ? "caret-up" : "caret-down"}
+                size={20}
+                color="#000000"
+                style={{ marginLeft: 10 }}
+              />
+            </TouchableOpacity>
+            {showRoomReservation && (
+              <View style={styles.reservationCard}>
+                {reservations.map((item) => (
+                  <View key={item.id}>
+                    <Text>
+                      <Text style={{ fontWeight: "bold" }}>
+                        Room: {item?.room?.room || "-"}
+                      </Text>
+                    </Text>
+                    <Text>
+                      <Text>
+                        Time: {item?.timeSlot?.start || "-"} -{" "}
+                        {item?.timeSlot?.end || "-"}
+                      </Text>
+                      <Text
+                        style={{
+                          color:
+                            item?.type === "confirmed"
+                              ? "green"
+                              : item?.type === "pending"
+                              ? "yellow"
+                              : "red",
+                        }}
+                      >
+                        : {item?.type || "-"}
+                      </Text>
+                    </Text>
+                  </View>
+                ))}
               </View>
-            ))}
+            )}
           </View>
 
-          <View
-            style={{
-              alignItems: "center",
-              padding: 20,
-              backgroundColor: "#BD1616",
-              borderRadius: 15,
-              margin: 10,
-            }}
-          >
-            {transactions.length > 0 && (
-              <>
-                <Text
-                  style={{
-                    fontSize: 25,
-                    fontWeight: "bold",
-                    color: "#FFFFFF",
-                    borderBottomColor: "#FFFFFF",
-                    paddingBottom: 4,
-                    borderBottomWidth: 2,
-                  }}
-                >
-                  Borrowed Books
-                </Text>
+          {/* Borrowed Books Section */}
+          <View style={{ margin: 10, alignItems: "center" }}>
+            <TouchableOpacity
+              onPress={() => setShowBorrowedBooks(!showBorrowedBooks)}
+              style={{ flexDirection: "row", alignItems: "center" }}
+            >
+              <Text
+                style={{ fontSize: 25, fontWeight: "bold", color: "#000000" }}
+              >
+                Borrowed Books
+              </Text>
+              <FontAwesome
+                name={showBorrowedBooks ? "caret-up" : "caret-down"}
+                size={20}
+                color="#000000"
+                style={{ marginLeft: 10 }}
+              />
+            </TouchableOpacity>
+            {showBorrowedBooks && (
+              <View style={styles.transactionCard}>
                 {transactions.map((item) => (
-                  <View key={item.id} style={styles.transactionCard}>
+                  <View key={item.id}>
                     <Text style={{ fontWeight: "bold" }}>
-                      Book: {item?.book?.name?.en||"-"}
+                      Book: {item?.book?.name?.en || "-"}
                     </Text>
                     <Text>
                       Borrow Date:{" "}
-                      {new Date(item?.borrowDate||"-").toLocaleDateString()}
+                      {new Date(item?.borrowDate || "-").toLocaleDateString()}
                     </Text>
                     <Text>
-                      Due Date: {new Date(item?.dueDate||"-").toLocaleDateString()}
+                      Due Date:{" "}
+                      {new Date(item?.dueDate || "-").toLocaleDateString()}
                     </Text>
                     <TouchableOpacity
                       onPress={() => handleOpenConfirmModal(item.id)}
@@ -283,7 +284,7 @@ export default function Profile() {
                     </TouchableOpacity>
                   </View>
                 ))}
-              </>
+              </View>
             )}
           </View>
 
@@ -314,17 +315,19 @@ export default function Profile() {
               </View>
             </View>
           </Modal>
-
-          <View style={styles.logoutButton}>
-            <TouchableOpacity
-              onPress={handleLogout}
-              style={{ alignItems: "center" }}
-            >
-              <AntDesign name="logout" size={40} color="black" />
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
+      <View style={styles.logoutButton}>
+        <TouchableOpacity
+          onPress={handleLogout}
+          style={{ alignItems: "center" }}
+        >
+          <AntDesign name="logout" size={40} color="#BD1616" />
+          <Text>
+            Logout
+          </Text>
+        </TouchableOpacity>
+      </View>
     </ImageBackground>
   );
 }
@@ -345,9 +348,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: 300,
     alignItems: "flex-start",
+    borderColor: "gray",
+    borderWidth: 1,
   },
   logoutButton: {
-    marginTop: 20,
+    marginBottom:30
   },
   emptyList: {
     color: "#FFFFFF",
@@ -362,6 +367,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: 300,
     alignItems: "flex-start",
+    borderColor: "gray",
+    borderWidth: 1,
   },
   renewButton: {
     backgroundColor: "#BD1616",
@@ -369,7 +376,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
     alignItems: "center",
-  }, modalOverlay: {
+  },
+  modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",

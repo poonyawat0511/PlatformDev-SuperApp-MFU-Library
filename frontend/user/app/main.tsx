@@ -13,16 +13,21 @@ export default function Main() {
     <Tab.Navigator
       initialRouteName="Book"
       screenOptions={{
-        tabBarActiveTintColor: "#FBFBFB",
-        tabBarInactiveTintColor: "#FBFBFB",
+        tabBarActiveTintColor: "#FFFFFF",
+        tabBarInactiveTintColor: "#000000",
         tabBarLabelStyle: { fontSize: 12 },
         tabBarStyle: {
-          backgroundColor: "#BD1616",
+          backgroundColor: "#FFFFFF",
         },
         swipeEnabled: false,
         tabBarIndicatorStyle: {
-          backgroundColor: "#FFFFFF",
-          height: 3,
+          backgroundColor: "#BD1616",
+          height: "90%",
+          width: "32%",
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          marginLeft: 1,
+          marginRight: 1,
         },
       }}
     >

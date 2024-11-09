@@ -27,7 +27,7 @@ export class Room {
   type: RoomType | Types.ObjectId;
 }
 export const RoomSchema = SchemaFactory.createForClass(Room);
-RoomSchema.index({ room: 1, type: 1 }, { unique: true });
+RoomSchema.index({ room: 1, floor: 1 }, { unique: true });
 
 RoomSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });
 RoomSchema.set("toObject", { flattenObjectIds: true, versionKey: false });

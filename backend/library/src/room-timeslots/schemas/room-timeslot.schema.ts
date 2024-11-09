@@ -28,6 +28,8 @@ export class RoomTimeSlot {
 }
 
 export const RoomTimeSlotSchema = SchemaFactory.createForClass(RoomTimeSlot);
+RoomTimeSlotSchema.index({ room: 1, timeSlot: 1 }, { unique: true });
+
 RoomTimeSlotSchema.set("toJSON", { flattenObjectIds: true, versionKey: false });
 RoomTimeSlotSchema.set("toObject", {
   flattenObjectIds: true,
