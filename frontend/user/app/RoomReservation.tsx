@@ -176,7 +176,7 @@ export default function RoomReservation() {
             </View>
           </ScrollView>
         </View>
-        <View>
+        <View style={{flex:1}}>
           <Text>
             <ReservationTable
               timeSlots={timeSlots}

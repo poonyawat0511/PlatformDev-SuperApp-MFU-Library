@@ -1,3 +1,4 @@
+import apiClient from "@/utils/api/libraryApi/apiClient";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import axios from "axios";
 import { useRouter } from "expo-router";
@@ -11,27 +12,28 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const router = useRouter();
   const [isLoginMode, setIsLoginMode] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleLogin = async () => {
-    try {
-      const response = await axios.post(
-        "http://172.27.66.240:8082/api/auth/login",
-        {
-          email,
-          password,
-        }
-      );
+    if (!email || !password) {
+      Alert.alert("Validation Error", "Please fill in both fields.");
+      return;
+    }
 
+    setIsLoading(true);
+    try {
+      const response = await apiClient.post("/auth/login", { email, password });
       if (response.data.message === "Login successful") {
-        Alert.alert("Login successfully")
+        Alert.alert("Login successful");
         router.push("./main");
       }
     } catch (error) {
@@ -41,31 +43,38 @@ export default function LoginScreen() {
       } else {
         Alert.alert("Login failed", "An unexpected error occurred.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleRegister = async () => {
-    try {
-      const response = await axios.post(
-        "http://172.27.66.240:8082/api/users/register",
-        {
-          email,
-          password,
-          username,
-        }
-      );
+    if (!email || !password || !username) {
+      Alert.alert("Validation Error", "Please fill in all fields.");
+      return;
+    }
 
+    setIsLoading(true);
+    try {
+      const response = await apiClient.post("/users/register", {
+        email,
+        password,
+        username,
+      });
       if (response.data.message === "Register successful") {
-        Alert.alert("Success", "You have register successfully."),
-          setIsLoginMode(true);
+        Alert.alert("Success", "You have registered successfully.");
+        setIsLoginMode(true);
       }
     } catch (error) {
       if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data.message || "Register failed";
+        const errorMessage =
+          error.response.data.message || "Registration failed";
         Alert.alert("Register failed", errorMessage);
       } else {
         Alert.alert("Register failed", "An unexpected error occurred.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -75,20 +84,15 @@ export default function LoginScreen() {
       imageStyle={{ opacity: 0.5 }}
       style={styles.background}
     >
-      <View style={{ flex: 1, justifyContent: "center", padding: 10 }}>
-        <View style={{ alignItems: "center", marginBottom: 20 }}>
-          <Image source={require("../assets/images/LibraryMFUsmalllogo.png")} />
-        </View>
-
-        <View
-          style={{
-            backgroundColor: "#FEF9F2",
-            borderRadius: 20,
-            padding: 20,
-          }}
-        >
+      <View style={styles.container}>
+        <View style={styles.formContainer}>
+          <View style={styles.logoContainer}>
+            <Image
+              source={require("../assets/images/LibraryMFUsmalllogo.png")}
+              style={styles.logo}
+            />
+          </View>
           {isLoginMode ? (
-            // Login Form
             <>
               <Text style={styles.title}>Login</Text>
               <TextInput
@@ -98,6 +102,7 @@ export default function LoginScreen() {
                 value={email}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                placeholderTextColor="white"
               />
               <TextInput
                 style={styles.input}
@@ -105,14 +110,20 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 value={password}
                 secureTextEntry
+                placeholderTextColor="white"
               />
               <TouchableOpacity onPress={handleLogin} style={styles.button}>
-                <AntDesign name="login" size={24} color="white" />
-                <Text style={styles.buttonText}>Login</Text>
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <AntDesign name="login" size={24} color="white" />
+                    <Text style={styles.buttonText}>Login</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </>
           ) : (
-            // Register Form
             <>
               <Text style={styles.title}>Register</Text>
               <TextInput
@@ -135,10 +146,17 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 value={password}
                 secureTextEntry
+                placeholderTextColor="white"
               />
               <TouchableOpacity onPress={handleRegister} style={styles.button}>
-                <AntDesign name="adduser" size={24} color="white" />
-                <Text style={styles.buttonText}>Register</Text>
+                {isLoading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <>
+                    <AntDesign name="adduser" size={24} color="white" />
+                    <Text style={styles.buttonText}>Register</Text>
+                  </>
+                )}
               </TouchableOpacity>
             </>
           )}
@@ -161,9 +179,26 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  logo: {
+    width: 150,
+    height: 100,
+    resizeMode: "contain",
+  },
   background: {
     flex: 1,
     resizeMode: "cover",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+  },
+  logoContainer: {
+    alignItems: "center",
+  },
+  formContainer: {
+    backgroundColor: "rgba(0, 0, 0, 0)",
+    padding: 20,
   },
   title: {
     fontWeight: "bold",
@@ -179,9 +214,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     textAlign: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    color:"white"
   },
   button: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#000000",
     padding: 10,
     borderRadius: 20,
     flexDirection: "row",
@@ -199,7 +236,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   toggleButtonText: {
-    color: "#007AFF",
+    color: "#000000",
     textDecorationLine: "underline",
   },
 });
