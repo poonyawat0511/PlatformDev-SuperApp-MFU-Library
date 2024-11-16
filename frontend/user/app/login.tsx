@@ -23,7 +23,7 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        "http://172.20.10.11:8082/api/auth/login",
+        "http://172.27.66.240:8082/api/auth/login",
         {
           email,
           password,
@@ -47,7 +47,7 @@ export default function LoginScreen() {
   const handleRegister = async () => {
     try {
       const response = await axios.post(
-        "http://172.20.10.11:8082/api/users/register",
+        "http://172.27.66.240:8082/api/users/register",
         {
           email,
           password,

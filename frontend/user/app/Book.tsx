@@ -1,13 +1,14 @@
+import DetailDialog from "@/components/libraryDialog/detailDialog";
+import { Books } from "@/utils/api/interfaces/books";
+import apiClient from "@/utils/api/libraryApi/apiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
-import axios from "axios";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   Image,
   ImageBackground,
-  Modal,
   StyleSheet,
   Text,
   TextInput,
@@ -15,33 +16,22 @@ import {
   View,
 } from "react-native";
 
-interface Book {
-  id: string;
-  name: { th: string; en: string };
-  description: { th: string; en: string };
-  bookImage: string;
-  category: { id: string; name: { th: string; en: string } };
-  status: string;
-  quantity: number;
-  ISBN: string;
-}
-
 export default function BookPage() {
-  const [books, setBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState<Books[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedBook, setSelectedBook] = useState<Books | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
   const [searchText, setSearchText] = useState("");
+  const ipAddress = `http://172.27.66.240`;
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get("http://172.20.10.11:8082/api/books/");
-      const updatedBooks = response.data.data.map((book: Book) => ({
+      const response = await apiClient.get("/books/");
+      const updatedBooks = response.data.data.map((book: Books) => ({
         ...book,
         bookImage: book.bookImage.replace(
           "http://127.0.0.1",
-          "http://172.20.10.11"
+          `${ipAddress}`
         ),
       }));
       setBooks(updatedBooks);
@@ -52,25 +42,13 @@ export default function BookPage() {
     }
   };
 
-  const fetchProfile = async () => {
-    try {
-      const response = await axios.get(
-        "http://172.20.10.11:8082/api/users/profile"
-      );
-      setUsername(response.data.username);
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    }
-  };
-
   useFocusEffect(
     useCallback(() => {
       fetchBooks();
-      fetchProfile();
     }, [])
   );
 
-  const openModal = (book: Book) => {
+  const openModal = (book: Books) => {
     setSelectedBook(book);
     setIsModalVisible(true);
   };
@@ -150,46 +128,11 @@ export default function BookPage() {
             </TouchableOpacity>
           )}
         />
-        <Modal
+        <DetailDialog
           visible={isModalVisible}
-          animationType="slide"
-          transparent={true}
-        >
-          <View style={styles.modalContainer}>
-            <View style={styles.modal}>
-              {selectedBook && (
-                <View style={styles.modalContent}>
-                  <Image
-                    source={{ uri: selectedBook.bookImage }}
-                    style={styles.modalImage}
-                  />
-                  <Text style={styles.modalTitle}>{selectedBook.name.en}</Text>
-                  <Text style={styles.modalDescription}>
-                    {selectedBook.description.en}
-                  </Text>
-                  <View style={styles.modalDetailsContainer}>
-                    <Text style={styles.modalDetails}>
-                      Quantity: {selectedBook.quantity}
-                    </Text>
-                    <Text style={styles.modalDetails}>
-                      ISBN: {selectedBook.ISBN}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.closeButton}
-                    onPress={closeModal}
-                  >
-                    <Ionicons
-                      name="arrow-back-circle"
-                      size={40}
-                      color="black"
-                    />
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-          </View>
-        </Modal>
+          book={selectedBook}
+          onClose={closeModal}
+        />
       </View>
     </ImageBackground>
   );
@@ -208,7 +151,7 @@ const styles = StyleSheet.create({
     borderColor: "gray",
     borderWidth: 1,
     margin: 10,
-    paddingLeft:5,
+    paddingLeft: 5,
     borderRadius: 20,
     width: "90%",
     alignSelf: "center",
@@ -244,55 +187,5 @@ const styles = StyleSheet.create({
     borderBottomColor: "gray",
   },
   bookStatus: { fontSize: 15, fontWeight: "bold" },
-  modalContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.6)",
-  },
-  modal: {
-    width: "80%",
-    padding: 20,
-    backgroundColor: "white",
-    borderRadius: 15,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 10,
-  },
-  modalImage: {
-    width: "100%",
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 20,
-    resizeMode: "cover",
-  },
-  modalContent: {
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  modalDescription: {
-    fontSize: 16,
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  modalDetailsContainer: {
-    marginTop: 10,
-  },
-  modalDetails: {
-    fontSize: 15,
-    color: "gray",
-    marginVertical: 2,
-  },
   background: { flex: 1 },
-  closeButton: {
-    marginTop: 15,
-    alignItems: "center",
-  },
 });

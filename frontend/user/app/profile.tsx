@@ -1,7 +1,12 @@
+import ConfirmLogout from "@/components/libraryDialog/comfirmLogout";
+import { RenewDialog } from "@/components/libraryDialog/renewDialog";
+import BorrowsCard from "@/components/libraryTable/borrowsCard";
+import ReservationsCard from "@/components/libraryTable/reservationsCard";
+import { Reservations } from "@/utils/api/interfaces/reservations";
+import apiClient from "@/utils/api/libraryApi/apiClient";
 import { FontAwesome } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import axios from "axios";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -9,28 +14,19 @@ import {
   Alert,
   Image,
   ImageBackground,
-  Modal,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-interface Reservation {
-  id: string;
-  room: { id: string; room: number };
-  timeSlot: { id: string; start: string; end: string };
-  type: string;
-  dateTime: string;
-  user: { id: string; username: string };
-}
 
 export default function Profile() {
   const [profile, setProfile] = useState<{
     username: string;
     email: string;
   } | null>(null);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservations, setReservations] = useState<Reservations[]>([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
   const router = useRouter();
@@ -43,19 +39,16 @@ export default function Profile() {
   >(null);
   const [showRoomReservation, setShowRoomReservation] = useState(false);
   const [showBorrowedBooks, setShowBorrowedBooks] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const fetchProfileAndReservations = async () => {
     try {
-      const profileResponse = await axios.get(
-        "http://172.20.10.11:8082/api/users/profile"
-      );
+      const profileResponse = await apiClient.get("/users/profile");
       setProfile(profileResponse.data);
 
-      const reservationResponse = await axios.get(
-        "http://172.20.10.11:8082/api/reservations/"
-      );
+      const reservationResponse = await apiClient.get("/reservations/");
       const userReservations = reservationResponse.data.data.filter(
-        (res: Reservation) =>
+        (res: Reservations) =>
           res.user.username === profileResponse.data.username
       );
       setReservations(userReservations);
@@ -69,9 +62,7 @@ export default function Profile() {
 
   const fetchTransactions = async (username: string) => {
     try {
-      const transactionResponse = await axios.get(
-        "http://172.20.10.11:8082/api/transactions/"
-      );
+      const transactionResponse = await apiClient.get("/transactions/");
 
       const userTransactions = transactionResponse.data.data.filter(
         (transaction: any) => transaction.user.username === username
@@ -79,8 +70,8 @@ export default function Profile() {
 
       const renewPromises = userTransactions.map(async (transaction: any) => {
         try {
-          const renewResponse = await axios.get(
-            `http://172.20.10.11:8082/api/renews/?transaction=${transaction.id}`
+          const renewResponse = await apiClient.get(
+            `/renews/?transaction=${transaction.id}`
           );
 
           if (renewResponse.data.data) {
@@ -116,9 +107,7 @@ export default function Profile() {
 
   const handleLogout = async () => {
     try {
-      const response = await axios.post(
-        "http://172.20.10.11:8082/api/auth/logout"
-      );
+      const response = await apiClient.post("/auth/logout");
       if (response.data.message === "Logout successful") {
         Alert.alert("Success", "You have logged out successfully.", [
           { text: "OK", onPress: () => router.push("./login") },
@@ -139,10 +128,9 @@ export default function Profile() {
     if (!selectedTransactionId) return;
 
     try {
-      const response = await axios.post(
-        "http://172.20.10.11:8082/api/renews/",
-        { transaction: selectedTransactionId }
-      );
+      const response = await apiClient.post("/renews/", {
+        transaction: selectedTransactionId,
+      });
       if (response.status === 200) {
         Alert.alert("Success", "Renew request sent successfully.");
         fetchTransactions(profile?.username || "");
@@ -209,124 +197,40 @@ export default function Profile() {
               />
             </TouchableOpacity>
             {showRoomReservation && (
-              <View style={styles.reservationCard}>
-                {reservations.map((item) => (
-                  <View key={item.id}>
-                    <Text>
-                      <Text style={{ fontWeight: "bold" }}>
-                        Room: {item?.room?.room || "-"}
-                      </Text>
-                    </Text>
-                    <Text>
-                      <Text>
-                        Time: {item?.timeSlot?.start || "-"} -{" "}
-                        {item?.timeSlot?.end || "-"}
-                      </Text>
-                      <Text
-                        style={{
-                          color:
-                            item?.type === "confirmed"
-                              ? "green"
-                              : item?.type === "pending"
-                              ? "yellow"
-                              : "red",
-                        }}
-                      >
-                        : {item?.type || "-"}
-                      </Text>
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              <ReservationsCard reservations={reservations} />
             )}
           </View>
 
           {/* Borrowed Books Section */}
-          <View style={{ margin: 10, alignItems: "center" }}>
-            <TouchableOpacity
-              onPress={() => setShowBorrowedBooks(!showBorrowedBooks)}
-              style={{ flexDirection: "row", alignItems: "center" }}
-            >
-              <Text
-                style={{ fontSize: 25, fontWeight: "bold", color: "#000000" }}
-              >
-                Borrowed Books
-              </Text>
-              <FontAwesome
-                name={showBorrowedBooks ? "caret-up" : "caret-down"}
-                size={20}
-                color="#000000"
-                style={{ marginLeft: 10 }}
-              />
-            </TouchableOpacity>
-            {showBorrowedBooks && (
-              <View style={styles.transactionCard}>
-                {transactions.map((item) => (
-                  <View key={item.id}>
-                    <Text style={{ fontWeight: "bold" }}>
-                      Book: {item?.book?.name?.en || "-"}
-                    </Text>
-                    <Text>
-                      Borrow Date:{" "}
-                      {new Date(item?.borrowDate || "-").toLocaleDateString()}
-                    </Text>
-                    <Text>
-                      Due Date:{" "}
-                      {new Date(item?.dueDate || "-").toLocaleDateString()}
-                    </Text>
-                    <TouchableOpacity
-                      onPress={() => handleOpenConfirmModal(item.id)}
-                      style={styles.renewButton}
-                    >
-                      <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                        Renew
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </View>
-            )}
-          </View>
-
-          <Modal
-            transparent={true}
+          <BorrowsCard
+            transactions={transactions}
+            showBorrowedBooks={showBorrowedBooks}
+            toggleBorrowedBooks={() => setShowBorrowedBooks(!showBorrowedBooks)}
+            onRenewRequest={handleOpenConfirmModal}
+          />
+          <RenewDialog
             visible={showConfirmModal}
-            animationType="fade"
-            onRequestClose={() => setShowConfirmModal(false)}
-          >
-            <View style={styles.modalOverlay}>
-              <View style={styles.modalContainer}>
-                <Text style={styles.modalTitle}>Confirm Renewal</Text>
-                <Text>Are you sure you want to renew this book?</Text>
-                <View style={styles.modalButtonContainer}>
-                  <TouchableOpacity
-                    style={styles.confirmButton}
-                    onPress={handleConfirmRenew}
-                  >
-                    <Text style={{ color: "#fff" }}>Confirm</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.cancelButton}
-                    onPress={() => setShowConfirmModal(false)}
-                  >
-                    <Text style={{ color: "#fff" }}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
+            onConfirm={handleConfirmRenew}
+            onCancel={() => setShowConfirmModal(false)}
+          />
         </View>
       </ScrollView>
       <View style={styles.logoutButton}>
         <TouchableOpacity
-          onPress={handleLogout}
+          onPress={() => setShowLogoutModal(true)} // Show modal
           style={{ alignItems: "center" }}
         >
           <AntDesign name="logout" size={40} color="#BD1616" />
-          <Text>
-            Logout
-          </Text>
+          <Text>Logout</Text>
         </TouchableOpacity>
+        <ConfirmLogout
+          visible={showLogoutModal}
+          onConfirm={() => {
+            handleLogout();
+            setShowLogoutModal(false);
+          }}
+          onCancel={() => setShowLogoutModal(false)}
+        />
       </View>
     </ImageBackground>
   );
@@ -352,7 +256,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   logoutButton: {
-    marginBottom:30
+    marginBottom: 30,
   },
   emptyList: {
     color: "#FFFFFF",
@@ -376,39 +280,5 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
     alignItems: "center",
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContainer: {
-    width: 300,
-    padding: 20,
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalButtonContainer: {
-    flexDirection: "row",
-    marginTop: 20,
-  },
-  cancelButton: {
-    backgroundColor: "gray",
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 10,
-  },
-  confirmButton: {
-    backgroundColor: "#BD1616",
-    padding: 10,
-    borderRadius: 5,
-    marginHorizontal: 10,
   },
 });
