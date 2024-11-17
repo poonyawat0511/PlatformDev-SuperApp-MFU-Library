@@ -1,14 +1,8 @@
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
 import { Rooms } from "@/utils/api/interfaces/rooms";
 import { RoomTimeSlots } from "@/utils/api/interfaces/roomtimeslots";
 import { TimeSlots } from "@/utils/api/interfaces/timeslots";
-import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
 
 interface ReservationTableProps {
   timeSlots: TimeSlots[];
@@ -30,107 +24,108 @@ const ReservationTable: React.FC<ReservationTableProps> = ({
     : rooms;
 
   return (
-    <ScrollView horizontal>
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        nestedScrollEnabled={true}
-        style={{ flex: 1 }}
-      >
-        <View style={{ alignItems: "center", marginBottom: 10, marginStart: 6 }}>
-          {/* Table Headers */}
-          <View style={styles.tableRow}>
-            <Text style={styles.headerCell}>Room/Time</Text>
-            {timeSlots.map((slot) => (
-              <Text key={slot.id} style={styles.headerCell}>
-                {slot.start} - {slot.end}
-              </Text>
-            ))}
+    <ScrollView style={styles.container}>
+      {filteredRooms
+        .sort((a, b) => a.type.name.en.localeCompare(b.type.name.en))
+        .map((room) => (
+          <View key={room.id} style={styles.card}>
+            <Text style={styles.roomTitle}>
+              {room.type.name.en} {room.room}
+            </Text>
+            <ScrollView horizontal style={styles.timeSlotsContainer}>
+              {timeSlots.map((timeSlot) => {
+                const slot = roomTimeSlots.find(
+                  (rts) =>
+                    rts.room?.id === room.id &&
+                    rts.timeSlot?.id === timeSlot.id
+                );
+
+                return (
+                  <TouchableOpacity
+                    key={timeSlot.id}
+                    style={[
+                      styles.timeSlot,
+                      slot
+                        ? slot.status === "free"
+                          ? styles.freeSlot
+                          : slot.status === "reserved"
+                          ? styles.reservedSlot
+                          : styles.inUseSlot
+                        : styles.emptySlot,
+                    ]}
+                    onPress={() => handleCellClick(room, timeSlot)}
+                  >
+                    <Text style={styles.timeSlotText}>
+                      {timeSlot.start} - {timeSlot.end}
+                    </Text>
+                    <Text style={styles.statusText}>
+                      {slot?.status ?? "Unavailable"}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
-
-          {filteredRooms
-            .sort((a, b) => a.type.name.en.localeCompare(b.type.name.en))
-            .map((room) => (
-              <View key={room.id} style={styles.tableRow}>
-                <Text style={styles.headerCell}>
-                  {room.type.name.en} {room.room}
-                </Text>
-                {timeSlots.map((timeSlot) => {
-                  const slot = roomTimeSlots.find(
-                    (rts) =>
-                      rts.room?.id === room.id &&
-                      rts.timeSlot?.id === timeSlot.id
-                  );
-
-                  return (
-                    <TouchableOpacity
-                      key={timeSlot.id}
-                      style={[
-                        styles.cell,
-                        slot
-                          ? slot.status === "free"
-                            ? styles.freeCell
-                            : slot.status === "reserved"
-                            ? styles.reservedCell
-                            : styles.inUseCell
-                          : styles.emptyCell,
-                      ]}
-                      onPress={() => handleCellClick(room, timeSlot)}
-                    >
-                      <Text style={styles.cellText}>
-                        {slot?.status ?? "-"}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-            ))}
-        </View>
-      </ScrollView>
+        ))}
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  tableRow: {
-    flexDirection: "row",
-    alignItems: "center",
+  container: {
+    flex: 1,
+    padding: 10,
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 15,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  roomTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
     marginBottom: 10,
   },
-  headerCell: {
-    padding: 10,
-    backgroundColor: "#F9F4D2",
-    width: 120,
-    textAlign: "center",
-    fontWeight: "bold",
-    marginRight: 10,
-    borderRadius: 10,
+  timeSlotsContainer: {
+    flexDirection: "row",
   },
-  cell: {
+  timeSlot: {
     width: 120,
     padding: 10,
-    justifyContent: "center",
+    borderRadius: 8,
+    marginRight: 10,
     alignItems: "center",
-    marginRight: 10,
+    justifyContent: "center",
   },
-  cellText: {
-    color: "dark",
+  timeSlotText: {
+    fontSize: 14,
+    fontWeight: "bold",
   },
-  freeCell: {
-    backgroundColor: "#91C483",
-    borderRadius: 10,
+  statusText: {
+    fontSize: 12,
+    marginTop: 5,
   },
-  reservedCell: {
-    backgroundColor: "#FFE162",
-    borderRadius: 10,
+  freeSlot: {
+    backgroundColor: "#F0F0F0",
+    borderRadius: 20,
   },
-  inUseCell: {
-    backgroundColor: "#FF6464",
-    borderRadius: 10,
+  reservedSlot: {
+    backgroundColor: "#9F9F9E",
+    borderRadius: 20,
   },
-  emptyCell: {
-    backgroundColor: "#FFE700",
-    borderRadius: 10,
-    opacity: 0,
+  inUseSlot: {
+    backgroundColor: "#FFD663",
+    borderRadius: 20,
+  },
+  emptySlot: {
+    backgroundColor: "#FED91",
+    borderRadius: 20,
   },
 });
 

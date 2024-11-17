@@ -80,7 +80,7 @@ export default function LoginScreen() {
 
   return (
     <ImageBackground
-      source={require("../assets/images/LibraryMFUBG.png")}
+      source={require("../assets/images/loginBg.jpg")}
       imageStyle={{ opacity: 0.5 }}
       style={styles.background}
     >
@@ -102,7 +102,7 @@ export default function LoginScreen() {
                 value={email}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholderTextColor="white"
+                placeholderTextColor="gray"
               />
               <TextInput
                 style={styles.input}
@@ -110,7 +110,7 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 value={password}
                 secureTextEntry
-                placeholderTextColor="white"
+                placeholderTextColor="gray"
               />
               <TouchableOpacity onPress={handleLogin} style={styles.button}>
                 {isLoading ? (
@@ -146,7 +146,6 @@ export default function LoginScreen() {
                 onChangeText={setPassword}
                 value={password}
                 secureTextEntry
-                placeholderTextColor="white"
               />
               <TouchableOpacity onPress={handleRegister} style={styles.button}>
                 {isLoading ? (
@@ -208,14 +207,12 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 40,
-    borderColor: "gray",
-    borderWidth: 1,
     marginBottom: 20,
     borderRadius: 20,
     paddingHorizontal: 10,
     textAlign: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    color:"white"
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
+    color: "black",
   },
   button: {
     backgroundColor: "#000000",
