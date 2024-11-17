@@ -13,7 +13,7 @@ export default function Index() {
 
   return (
     <ImageBackground
-      source={require("../assets/images/LibraryMFUBG.png")}
+      source={require("../assets/images/loginBg.jpg")}
       imageStyle={{ opacity: 0.5 }}
       style={styles.background}
     >

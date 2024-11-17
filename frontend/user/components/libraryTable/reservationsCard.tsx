@@ -1,6 +1,6 @@
 import React from "react";
 import { Reservations } from "@/utils/api/interfaces/reservations";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 
 interface ReservationsCardProps {
   reservations: Reservations[];
@@ -10,50 +10,66 @@ const ReservationsCard: React.FC<ReservationsCardProps> = ({
   reservations,
 }) => {
   return (
-    <View style={styles.reservationCard}>
+    <View style={styles.reservationCardContainer}>
       {reservations.map((item) => (
-        <View key={item.id} style={styles.reservationItem}>
-          <Text style={{ fontWeight: "bold" }}>
-            Room: {item?.room?.room || "-"}
-          </Text>
+        <TouchableOpacity key={item.id} style={styles.card}>
+          <Text style={styles.roomText}>Room: {item?.room?.room || "-"}</Text>
           <Text>
-            <Text>
-              Time: {item?.timeSlot?.start || "-"} -{" "}
-              {item?.timeSlot?.end || "-"}
-            </Text>
-            <Text>  </Text>
-            <Text
-              style={{
+          <Text style={styles.timeText}>
+            Time: {item?.timeSlot?.start || "-"} -{" "}
+            {item?.timeSlot?.end || "-"}
+          </Text>
+          <Text> : </Text>
+          <Text
+            style={[
+              styles.typeText,
+              {
                 color:
                   item?.type === "confirmed"
-                    ? "green"
+                    ? "#48CFAD"
                     : item?.type === "pending"
-                    ? "yellow"
-                    : "red",
-              }}
-            >
-              {item?.type || "-"}
-            </Text>
+                    ? "#F6BB42"
+                    : "#FE6454",
+              },
+            ]}
+          >
+            {item?.type || "-"}
           </Text>
-        </View>
+          </Text>
+        </TouchableOpacity>
       ))}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  reservationCard: {
+  reservationCardContainer: {
     padding: 10,
     margin: 10,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  card: {
+    padding: 15,
+    marginVertical: 5,
     backgroundColor: "#fff",
     borderRadius: 10,
-    width: 300,
-    alignItems: "center",
+    width: "100%",
+    alignItems: "flex-start",
     borderColor: "gray",
     borderWidth: 1,
   },
-  reservationItem: {
-    marginBottom: 10,
+  roomText: {
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  timeText: {
+    marginBottom: 5,
+  },
+  typeText: {
+    fontWeight: "bold",
   },
 });
 

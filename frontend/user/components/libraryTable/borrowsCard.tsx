@@ -4,7 +4,6 @@ import {
   TouchableOpacity,
   View,
   StyleSheet,
-  Alert,
 } from "react-native";
 import { FontAwesome } from "@expo/vector-icons";
 
@@ -29,41 +28,37 @@ const BorrowsCard: React.FC<BorrowsCardProps> = ({
   onRenewRequest,
 }) => {
   return (
-    <View style={{ margin: 10, alignItems: "center" }}>
+    <View style={styles.container}>
       <TouchableOpacity
         onPress={toggleBorrowedBooks}
-        style={{ flexDirection: "row", alignItems: "center" }}
+        style={styles.toggleButton}
       >
-        <Text style={{ fontSize: 25, fontWeight: "bold", color: "#000000" }}>
-          Borrowed Books
-        </Text>
+        <Text style={styles.headerText}>Borrowed Books</Text>
         <FontAwesome
           name={showBorrowedBooks ? "caret-up" : "caret-down"}
           size={20}
           color="#000000"
-          style={{ marginLeft: 10 }}
+          style={styles.icon}
         />
       </TouchableOpacity>
       {showBorrowedBooks && (
-        <View style={styles.transactionCard}>
+        <View style={styles.transactionCardContainer}>
           {transactions.map((item) => (
-            <View key={item.id} style={styles.transactionItem}>
-              <Text style={{ fontWeight: "bold" }}>
+            <View key={item.id} style={styles.transactionCard}>
+              <Text style={styles.bookTitle}>
                 Book: {item?.book?.name?.en || "-"}
               </Text>
-              <Text>
-                Borrow Date:{" "}
-                {new Date(item?.borrowDate || "-").toLocaleDateString()}
+              <Text style={styles.text}>
+                Borrow Date: {new Date(item?.borrowDate || "-").toLocaleDateString()}
               </Text>
-              <Text>
-                Due Date:{" "}
-                {new Date(item?.dueDate || "-").toLocaleDateString()}
+              <Text style={styles.text}>
+                Due Date: {new Date(item?.dueDate || "-").toLocaleDateString()}
               </Text>
               <TouchableOpacity
                 onPress={() => onRenewRequest(item.id)}
                 style={styles.renewButton}
               >
-                <Text style={{ color: "#fff", fontWeight: "bold" }}>Renew</Text>
+                <Text style={styles.renewButtonText}>Renew</Text>
               </TouchableOpacity>
             </View>
           ))}
@@ -74,18 +69,46 @@ const BorrowsCard: React.FC<BorrowsCardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  transactionCard: {
-    padding: 10,
+  container: {
     margin: 10,
+    alignItems: "center",
+  },
+  toggleButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerText: {
+    fontSize: 25,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  icon: {
+    marginLeft: 10,
+  },
+  transactionCardContainer: {
+    padding: 10,
+    marginTop: 10,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  transactionCard: {
+    padding: 15,
+    marginVertical: 5,
     backgroundColor: "#fff",
     borderRadius: 10,
-    width: 300,
-    alignItems: "center",
+    width: "100%",
+    alignItems: "flex-start",
     borderColor: "gray",
     borderWidth: 1,
   },
-  transactionItem: {
-    marginBottom: 15,
+  bookTitle: {
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  text: {
+    marginBottom: 5,
   },
   renewButton: {
     backgroundColor: "#BD1616",
@@ -93,6 +116,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginTop: 10,
     alignItems: "center",
+  },
+  renewButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
 
